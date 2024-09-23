@@ -1,4 +1,5 @@
 HEADERS += \
+    DrawWidget.h \
     clientwin.h \
     define.h \
     fileio.h \
@@ -6,6 +7,7 @@ HEADERS += \
     network.h
 
 SOURCES += \
+    DrawWidget.cpp \
     clientwin.cpp \
     fileio.cpp \
     main.cpp \

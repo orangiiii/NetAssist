@@ -21,6 +21,7 @@
 #include "clientwin.h"
 #include "fileio.h"
 #include "network.h"
+#include "drawwidget.h"
 
 
 
@@ -55,6 +56,11 @@ private slots:
     void handleReadButton();
 
     void handleWriteButton();
+
+    void handleCircleButton();
+
+    void handleRectangleButton();
+
 
 signals:
     void Connected();
@@ -102,6 +108,8 @@ private:
     void setupStatusBar();  // 初始化状态栏的函数
     void contextMenuEvent(QContextMenuEvent *event);
     // void setMenuBar(QMenuBar *);
+
+    DrawWidget *drawWidget;
 };
 
 #endif // MAINWINDOW_H

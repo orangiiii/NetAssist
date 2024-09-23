@@ -9,6 +9,9 @@
 #include <QApplication>
 #include <QMetaObject>
 
+#include <QPushButton>
+#include <QVBoxLayout>
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     // , ui(new Ui::MainWindow)
@@ -33,6 +36,34 @@ MainWindow::MainWindow(QWidget *parent)
     setupToolBar();
     setupStatusBar();
     label = new QLabel();
+
+    QWidget *centralWidget = new QWidget(this);
+    QVBoxLayout *layout = new QVBoxLayout(centralWidget);
+
+    // 创建绘制区域
+    drawWidget = new DrawWidget(this);
+    drawWidget->setFixedSize(400, 300);
+
+    // 创建按钮
+    QPushButton *circleButton = new QPushButton("Draw Circle", this);
+    QPushButton *rectangleButton = new QPushButton("Draw Rectangle", this);
+
+    // 布局
+    layout->addWidget(drawWidget);
+    layout->addWidget(circleButton);
+    layout->addWidget(rectangleButton);
+    setCentralWidget(centralWidget);
+
+    // 连接按钮的信号与槽
+    connect(circleButton, &QPushButton::clicked, [this]() {
+        drawWidget->enableDrawCircle(true);
+        drawWidget->enableDrawRectangle(false);  // 如果只想绘制圆，禁用矩形绘制
+    });
+
+    connect(rectangleButton, &QPushButton::clicked, [this]() {
+        drawWidget->enableDrawRectangle(true);
+        drawWidget->enableDrawCircle(false);
+    }) ;// 如果只想绘制矩形，禁用圆绘制
 }
 
 MainWindow::~MainWindow()
@@ -78,7 +109,7 @@ void MainWindow::setupUi()
     chooseBox->addItem(QString());
 
     createButton = new QPushButton(this);
-    createButton->setGeometry(QRect(10, 30, 93, 28));
+    createButton->setGeometry(QRect(10, 250, 93, 28));
 
     readButton = new QPushButton(this);
     readButton->setGeometry(QRect(190, 140, 81, 21));
@@ -127,11 +158,13 @@ void MainWindow::setupToolBar() {
     toolBar = new QToolBar(this);
     this->addToolBar(toolBar);
 
-    QAction *openAction = new QAction(QIcon(":/icons/open.jpg"), "打开", this);
-    QAction *saveAction = new QAction(QIcon(":/icons/save.jpg"), "保存", this);
+    QAction *openAction = new QAction(QIcon(":/icons/circle.jpg"), "圆", this);
+    QAction *saveAction = new QAction(QIcon(":/icons/rectangle.jpg"), "矩形", this);
 
     toolBar->addAction(openAction);
     toolBar->addAction(saveAction);
+    connect(openAction,&QAction::triggered,this,&MainWindow::handleCircleButton);
+    connect(saveAction,&QAction::triggered,this,&MainWindow::handleRectangleButton);
 }
 
 // 初始化状态栏
@@ -259,3 +292,49 @@ void MainWindow::updateTextEdit(const QString& data) {
     dataText->append(data);  // 将数据添加到 QTextEdit 中
 }
 
+
+void MainWindow::handleCircleButton()
+{
+    QString filePath = QFileDialog::getOpenFileName(this, tr("Open File"), "", tr("Text Files (*.txt);;Image Files (*.png *.jpg *.bmp);;All Files (*)"));
+    if (!filePath.isEmpty()) {
+
+        label->setFixedSize(400, 400);
+        int type = fileIO->readFile(filePath,*label);
+        if(type==READ_TEXT){
+            QString fileContent = label->text();
+            if (!fileContent.isEmpty()) {
+                textEdit->setText(fileContent);  // 将读取到的内容显示在 QtextEdit 中
+            }
+        }else if(type==READ_IMAGE){
+            label->show();
+        }else{
+
+            label->setFixedSize(200, 50);
+            label->show();
+        }
+    }
+
+}
+
+void MainWindow::handleRectangleButton()
+{
+    QString filePath = QFileDialog::getOpenFileName(this, tr("Open File"), "", tr("Text Files (*.txt);;Image Files (*.png *.jpg *.bmp);;All Files (*)"));
+    if (!filePath.isEmpty()) {
+
+        label->setFixedSize(400, 400);
+        int type = fileIO->readFile(filePath,*label);
+        if(type==READ_TEXT){
+            QString fileContent = label->text();
+            if (!fileContent.isEmpty()) {
+                textEdit->setText(fileContent);  // 将读取到的内容显示在 QtextEdit 中
+            }
+        }else if(type==READ_IMAGE){
+            label->show();
+        }else{
+
+            label->setFixedSize(200, 50);
+            label->show();
+        }
+    }
+
+}
