@@ -46,6 +46,10 @@ public:
     void timeout();
     void sendUdpData();
     void updateTextEdit(const QString &data);
+    void handleDrawButton();
+    void handleDrawCircleButton();
+    void handleDrawRectangleButton();
+    void handleCloseButton();
 private slots:
     void handleOpenButton();
 

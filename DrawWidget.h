@@ -4,15 +4,22 @@
 #include <QWidget>
 #include <QMouseEvent>
 #include <QPainter>
+#include <QMainWindow>
+#include <QMenuBar>
+#include <QToolBar>
 
-class DrawWidget : public QWidget {
+class DrawWidget : public QMainWindow {
     Q_OBJECT
 
 public:
-    explicit DrawWidget(QWidget *parent = nullptr);
-    void enableDrawCircle(bool enable);  // 启用/禁用绘制圆形
-    void enableDrawRectangle(bool enable);  // 启用/禁用绘制矩形
-
+    explicit DrawWidget(QMainWindow *parent = nullptr);
+    void openDraw();
+    void setBackgroundEnabled(bool enable);
+    void setupToolBar();
+    void handleCloseButton();
+    void enableDrawCircle();
+    void enableDrawRectangle();
+    void handleWithdrawButton();
 protected:
     void paintEvent(QPaintEvent *event) override;  // 重写绘制事件
     void mousePressEvent(QMouseEvent *event) override;  // 鼠标按下事件
@@ -21,14 +28,18 @@ protected:
 
 private:
     bool drawing;  // 是否正在绘制
+    bool drawingEnable;  // 绘图板
     bool drawCircleEnabled;
     bool drawRectangleEnabled;
-    QPoint startPoint;  // 起点
-    QPoint endPoint;  // 终点
+    QPoint startPoint;
+    QPoint endPoint;
     // 容器保存已绘制的图形
-    QList<QRect> rectangles;  // 保存矩形
-    QList<QPoint> circleCenters;  // 保存圆心
+    QList<QRect> rectangles;
+    QList<QPoint> circleCenters;
     QList<int> circleRadii;
+    QList<int> steps;
+    QPainter painter;
+    QToolBar *toolBar;
 
 };
 

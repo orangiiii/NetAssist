@@ -37,33 +37,8 @@ MainWindow::MainWindow(QWidget *parent)
     setupStatusBar();
     label = new QLabel();
 
-    QWidget *centralWidget = new QWidget(this);
-    QVBoxLayout *layout = new QVBoxLayout(centralWidget);
+    // QWidget *centralWidget = new QWidget(this);
 
-    // 创建绘制区域
-    drawWidget = new DrawWidget(this);
-    drawWidget->setFixedSize(400, 300);
-
-    // 创建按钮
-    QPushButton *circleButton = new QPushButton("Draw Circle", this);
-    QPushButton *rectangleButton = new QPushButton("Draw Rectangle", this);
-
-    // 布局
-    layout->addWidget(drawWidget);
-    layout->addWidget(circleButton);
-    layout->addWidget(rectangleButton);
-    setCentralWidget(centralWidget);
-
-    // 连接按钮的信号与槽
-    connect(circleButton, &QPushButton::clicked, [this]() {
-        drawWidget->enableDrawCircle(true);
-        drawWidget->enableDrawRectangle(false);  // 如果只想绘制圆，禁用矩形绘制
-    });
-
-    connect(rectangleButton, &QPushButton::clicked, [this]() {
-        drawWidget->enableDrawRectangle(true);
-        drawWidget->enableDrawCircle(false);
-    }) ;// 如果只想绘制矩形，禁用圆绘制
 }
 
 MainWindow::~MainWindow()
@@ -163,8 +138,8 @@ void MainWindow::setupToolBar() {
 
     toolBar->addAction(openAction);
     toolBar->addAction(saveAction);
-    connect(openAction,&QAction::triggered,this,&MainWindow::handleCircleButton);
-    connect(saveAction,&QAction::triggered,this,&MainWindow::handleRectangleButton);
+    connect(openAction,&QAction::triggered,this,&MainWindow::handleDrawCircleButton);
+    connect(saveAction,&QAction::triggered,this,&MainWindow::handleDrawRectangleButton);
 }
 
 // 初始化状态栏
@@ -222,6 +197,20 @@ void MainWindow::handleCreateButton()
 {
     MainWindow *newWin = new MainWindow;
     newWin->show();
+
+}
+void MainWindow::handleDrawCircleButton()
+{
+    drawWidget=new DrawWidget(this);
+    drawWidget->show();
+    drawWidget->enableDrawCircle();
+
+}
+void MainWindow::handleDrawRectangleButton()
+{
+    drawWidget=new DrawWidget;
+    drawWidget->show();
+    drawWidget->enableDrawRectangle();
 
 }
 

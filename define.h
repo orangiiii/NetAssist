@@ -15,5 +15,8 @@
 #define  READ_TEXT   1
 #define  READ_IMAGE   2
 
+#define STEP_CIRCLE 0
+#define STEP_RECTANGLE 1
+
 
 #endif   // MDEFINE_H
