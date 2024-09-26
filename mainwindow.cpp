@@ -259,9 +259,12 @@ void MainWindow::handleOpenButton()
     if(ifSendButton){
         sendButton->setEnabled(true);
         openButton->setText("已连接");
+        network->setIfConnected(true);
+
     }else{
 
-        openButton->setText("已连接");
+        openButton->setText("点击连接");
+        network->setIfConnected(false);
     }
 
 
@@ -278,9 +281,10 @@ void MainWindow::handleCreateButton()
 }
 void MainWindow::handleDrawCircleButton()
 {
-    drawWidget->show();
-    drawWidget->enableDrawCircle();
     drawWidget->setNetwork(this->network);
+    drawWidget->enableDrawCircle();
+    drawWidget->show();
+
 
 }
 void MainWindow::handleDrawRectangleButton()
@@ -351,15 +355,31 @@ void MainWindow::handleReadButton()
 
 void MainWindow::handleWriteButton()
 {
-    QString content = dataText->toPlainText();
-    // QString filePath = QFileDialog::getSaveFileName(this, tr("Save File"), "", tr("Text Files (*.txt);;All Files (*)"));
+    // QString content = dataText->toPlainText();
+    // // QString filePath = QFileDialog::getSaveFileName(this, tr("Save File"), "", tr("Text Files (*.txt);;All Files (*)"));
 
-        if( fileIO->writeFile(content)){
-            QMessageBox::information(this, tr("Success"), tr("Write file successfully."));
-        }else{
-            QMessageBox::information(this, tr("Error"), tr("Failed to write file."));
-        }
+    // if( fileIO->writeFile(content)){
+    //     QMessageBox::information(this, tr("Success"), tr("Write file successfully."));
+    // }else{
+    //     QMessageBox::information(this, tr("Error"), tr("Failed to write file."));
+    // }
 
+    QString htmlContent = dataText->toHtml();
+    QString filePath = QFileDialog::getSaveFileName(this, tr("Save HTML"), "", tr("HTML Files (*.html)"));
+    // 检查用户是否选择了保存文件路径
+    if (filePath.isEmpty()) {
+        return;  // 用户取消操作
+    }
+    // 创建文件并保存 HTML 内容
+    QFile file(filePath);
+    if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QTextStream out(&file);
+        out << htmlContent;  // 将 HTML 内容写入文件
+        file.close();
+        QMessageBox::information(this, "Success", "File saved successfully.");
+    } else {
+        QMessageBox::warning(this, "Error", "Failed to save the file.");
+    }
 }
 
 void MainWindow::updateTextEdit(const QString& data) {
@@ -422,7 +442,7 @@ void MainWindow::displayReceivedPicture( QByteArray &byteArray){
     QTextCursor cursor = dataText->textCursor();
     cursor.movePosition(QTextCursor::End);
     // 插入文本信息
-    dataText->append("recevied msg:");
+    dataText->append("recevied msg:\n");
     QString html = "<img src=\"data:image/png;base64," + base64Image + "\" width=\"200\">";
     dataText->insertHtml(html);
 }
@@ -433,7 +453,7 @@ void MainWindow::displaySendPicture( QByteArray &byteArray){
     QTextCursor cursor = dataText->textCursor();
     cursor.movePosition(QTextCursor::End);
     // 插入文本信息
-    dataText->append("send msg:");
+    dataText->append("send msg:\n");
     QString html = "<img src=\"data:image/png;base64," + base64Image + "\" width=\"200\">";
     dataText->insertHtml(html);
 }

@@ -65,10 +65,6 @@ bool FileIO::writeFile(const QString &content){
     QString filePath = QFileDialog::getSaveFileName(this, tr("Save File"), "",
                                                     tr("Image Files (*.png *.jpg *.bmp);;All Files (*)"));
 
-    if(filePath.isEmpty()){
-        QMessageBox::information(this, tr("Error"), tr("filepath is empty"));
-        return false;
-    }
     if(filePath.endsWith("txt",Qt::CaseInsensitive)){
         QFile file(filePath);
 
@@ -82,10 +78,11 @@ bool FileIO::writeFile(const QString &content){
         QTextStream out (&file);
         out<<content;
         file.close();
-        QMessageBox::information(this, tr("Success"), tr("Write file successfully."));
+        qDebug()<<("Write file successfully.");
         return true;
     }else{
-        QMessageBox::information(this, tr("Error"), tr("can not support the type"));
+
+        qDebug()<<("can not support the type");
         return false;
     }
 };
@@ -97,7 +94,7 @@ bool FileIO::writeImageFile(QPixmap  &pixmap){
                                                     tr("Image Files (*.png *.jpg *.bmp);;All Files (*)"));
 
     if(filePath.isEmpty()){
-        QMessageBox::information(this, tr("Error"), tr("filepath is empty"));
+        qDebug()<<("filepath is empty");
         return false;
     }
 

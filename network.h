@@ -46,6 +46,13 @@ public:
     void readPicture();
     // void setNetwork(Network* networkInstance);
     QByteArray getPicData(QPixmap *pixmap);
+
+    void setIfConnected(bool ifConnected){
+        this->ifConnected=ifConnected;
+    };
+    bool getIfConnected(){
+        return ifConnected;
+    };
 public slots:
     void readData(const QByteArray dataBuffer);
 private:
@@ -59,6 +66,8 @@ private:
     // MainWindow* mainWindow;
 
     Network* network;
+
+    bool ifConnected=false;
 
 signals:
     void readMessage(const QByteArray& data);

@@ -4,20 +4,9 @@ Network::Network(QWidget *parent)
     : QWidget(parent){
 
     tcpclient = new QTcpSocket(this);
-
-
-    // cpp中实例化对象, .h种添加私有成员对象
     tcpServer = new QTcpServer(this);
     udpSocket = new QUdpSocket(this);
-    // clientSocket  = new QTcpSocket(this);
-
-
-
 }
-//     , ui(new Ui::Network)
-// {
-//     ui->setupUi(this);
-// }
 
 Network::~Network()
 {
@@ -32,8 +21,6 @@ void Network::readData(const QByteArray buffer){
 
         QString recstr= QString::fromUtf8(data);
         emit dataReceived(recstr);
-        // this->ui->data->append("getMsg:");
-        // this->ui->data->append(recstr);
     }else if(TYPE_IMAGE==type){
         if(data.size()  < sizeof(qint64)){
             return;
@@ -87,7 +74,7 @@ void Network::readUdpData(){
         buffer.resize(datagramSize);
 
         udpSocket->readDatagram(buffer.data(), buffer.size());
-        qDebug() << "Received data: " << buffer;
+        qDebug() << "Received data:" << buffer;
 
         // buffer = udpSocket->readAll();
         QString recstr= QString::fromUtf8(buffer);
@@ -288,37 +275,3 @@ QByteArray Network::getPicData(QPixmap* pixmap){
 
     return finalData;
 }
-
-// void Network::readPicture(){
-
-//         // if(tcpclient->bytesAvailable()  < (sizeof(qint64)+1)){
-//         //     return;
-//         // }
-//         QByteArray sizeData = tcpclient->read(sizeof(qint64));
-//         QDataStream sizeStream(&sizeData,QIODevice::ReadOnly);
-//         qint64 imageSize = 0;
-//         sizeStream>>imageSize;
-//         qDebug() << "Expected image size:" << imageSize;
-
-//         // 检查是否有足够的数据来读取图片
-//         if (tcpclient->bytesAvailable() < imageSize) {
-//             return;  // 如果数据还不完整，返回等待
-//         }
-
-//         // 接收图片数据
-//         QByteArray imageData = tcpclient->read(imageSize);
-
-//         // 将字节数组转换为 QPixmap
-//         QPixmap pixmap;
-//         pixmap.loadFromData(imageData, "PNG");  // 假设图片是以 PNG 格式发送的
-
-//         // 在 QLabel 中显示图片
-//         if (!pixmap.isNull()) {
-//             emit pictureReceived(imageData);  // 发送信号，通知图片已接收
-//         } else {
-//             qDebug() << "Failed to load the image from data.";
-//         }
-
-
-
-// }

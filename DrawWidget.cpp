@@ -1,8 +1,8 @@
 #include "DrawWidget.h"
 
 #include <QDebug>
+#include <QVBoxLayout>
 #include "define.h"
-// #include <QtMath>
 
 
 DrawWidget::DrawWidget(QMainWindow *parent) :
@@ -11,15 +11,12 @@ DrawWidget::DrawWidget(QMainWindow *parent) :
     setFixedSize(400, 400);  // 设置固定窗口大小
     setupToolBar();
 
-
     fileIO = new FileIO(this);
-
 
 }
 // 初始化工具栏
 void DrawWidget::setupToolBar() {
     toolBar = new QToolBar(this);
-    this->addToolBar(toolBar);
 
     QAction *circleAction = new QAction(QIcon(":/icons/circle.jpg"), "圆", this);
     QAction *recAction = new QAction(QIcon(":/icons/rectangle.jpg"), "矩形", this);
@@ -27,6 +24,7 @@ void DrawWidget::setupToolBar() {
     QAction *closeAction = new QAction(QIcon(":/icons/close.jpg"), "关闭", this);
     QAction *saveAction = new QAction(QIcon(":/icons/save.jpg"), "保存", this);
     QAction *sendAction = new QAction(QIcon(":/icons/send.jpg"), "发送", this);
+
 
     toolBar->addAction(circleAction);
     toolBar->addAction(recAction);
@@ -41,6 +39,16 @@ void DrawWidget::setupToolBar() {
     connect(closeAction,&QAction::triggered,this,&DrawWidget::handleCloseButton);
     connect(saveAction,&QAction::triggered,this,&DrawWidget::handleSaveButton);
     connect(sendAction,&QAction::triggered,this,&DrawWidget::handleSendButton);
+
+    // 创建一个QWidget用于包装工具栏
+    QWidget *toolBarWidget = new QWidget(this);
+    QHBoxLayout *layout = new QHBoxLayout(toolBarWidget);
+    layout->addWidget(toolBar);
+    layout->setAlignment(Qt::AlignTop | Qt::AlignHCenter);  // 设置居中和顶端对齐
+    layout->setContentsMargins(0, 0, 0, 0);  // 去除边距
+
+    // 设置工具栏为QMainWindow的central widget
+    setCentralWidget(toolBarWidget);
 }
 void DrawWidget::enableDrawCircle() {
     drawCircleEnabled = true;
@@ -111,6 +119,10 @@ QPixmap DrawWidget::getPaintArea(){
 
 void DrawWidget::handleSendButton()
 {
+    if(!network->getIfConnected()){
+        QMessageBox::warning(this, "error", "请先连接!");
+        return;
+    }
     QPixmap pixmap = getPaintArea();
     QByteArray byteArray;
     QBuffer buffer(&byteArray);
