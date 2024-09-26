@@ -4,6 +4,8 @@
         <file>save.jpg</file>
         <file>circle.jpg</file>
         <file>rectangle.jpg</file>
-
+        <file>close.jpg</file>
+        <file>withdraw.jpg</file>
+        <file>send.jpg</file>
     </qresource>
 </RCC>

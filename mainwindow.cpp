@@ -13,9 +13,14 @@
 #include <QVBoxLayout>
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    // , ui(new Ui::MainWindow)
+    : QMainWindow(parent),
+    imageLabel(new QLabel(this)),// 初始化 QLabel
+    drawWidget(new DrawWidget(this))
 {
+    QString ip = IP_TEST;
+    quint16 port = PORT_TEST;
+    // QString ip = ipLine->text();
+    // QString port =portLine->text().toUShort();
     // setupUi(this);
 
     setupUi();
@@ -31,13 +36,23 @@ MainWindow::MainWindow(QWidget *parent)
     fileIO = new FileIO(this);
     network = new Network(this);
 
+    connect(network, &Network::readMessage, network, &Network::readData);
     connect(network, &Network::dataReceived, this, &MainWindow::updateTextEdit);
     setupMenuBar();
     setupToolBar();
     setupStatusBar();
     label = new QLabel();
 
-    // QWidget *centralWidget = new QWidget(this);
+    // 布局和初始化 QLabel 大小等
+    imageLabel->setFixedSize(100, 75);
+    imageLabel->setScaledContents(true);  // 如果需要图片自动适应大小
+
+    connect(drawWidget, &DrawWidget::pictureReady, this, &MainWindow::displaySendPicture);
+    connect(network, &Network::pictureReceived, this, &MainWindow::displayReceivedPicture);
+
+    //test
+    // handleCreateButton();
+
 
 }
 
@@ -48,7 +63,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::setupUi()
 {
-    this->resize(404, 296);
+    this->resize(500, 350);
 
     // 创建控件
     ipLabel = new QLabel(this);
@@ -68,13 +83,13 @@ void MainWindow::setupUi()
     openButton->setCheckable(true);
 
     dataText = new QTextBrowser(this);
-    dataText->setGeometry(QRect(190, 30, 191, 111));
+    dataText->setGeometry(QRect(190, 30, 250, 150));
 
     textEdit = new QTextEdit(this);
-    textEdit->setGeometry(QRect(190, 170, 191, 75));
+    textEdit->setGeometry(QRect(190, 200, 250, 75));
 
     sendButton = new QPushButton(this);
-    sendButton->setGeometry(QRect(290, 250, 93, 28));
+    sendButton->setGeometry(QRect(350, 280, 90, 25));
     sendButton->setCheckable(true);
 
     chooseBox = new QComboBox(this);
@@ -87,11 +102,11 @@ void MainWindow::setupUi()
     createButton->setGeometry(QRect(10, 250, 93, 28));
 
     readButton = new QPushButton(this);
-    readButton->setGeometry(QRect(190, 140, 81, 21));
+    readButton->setGeometry(QRect(190, 180, 90, 20));
     readButton->setCheckable(true);
 
     writeButton = new QPushButton(this);
-    writeButton->setGeometry(QRect(280, 140, 93, 28));
+    writeButton->setGeometry(QRect(350, 180, 90, 20));
     writeButton->setCheckable(true);
 
     QMetaObject::connectSlotsByName(this);
@@ -201,16 +216,17 @@ void MainWindow::handleCreateButton()
 }
 void MainWindow::handleDrawCircleButton()
 {
-    drawWidget=new DrawWidget(this);
     drawWidget->show();
     drawWidget->enableDrawCircle();
+    drawWidget->setNetwork(this->network);
 
 }
 void MainWindow::handleDrawRectangleButton()
 {
-    drawWidget=new DrawWidget;
     drawWidget->show();
     drawWidget->enableDrawRectangle();
+    drawWidget->setNetwork(this->network);
+    drawWidget->initDataFromMainwin(ip, port,chooseBox->currentIndex());
 
 }
 
@@ -221,13 +237,17 @@ void MainWindow::handleSendButton()
     // qDebug()<<sendButton->isEnabled();
 
     QString oriData(textEdit->toPlainText());
-    QString data = "send msg:"+ oriData;
+    QString data = "send msg:\n"+ oriData;
     QString ip = IP_TEST;
     quint16 port = PORT_TEST;
     // QString ip = ipLine->text();
     // QString port =portLine->text().toUShort();
+    QByteArray dataArray;
+    dataArray.append(TYPE_TEXT);
+    dataArray.append(oriData.toUtf8());
 
-    network->send(sendButton->isEnabled(),chooseBox->currentIndex(),ip,port,oriData);
+
+    network->send(sendButton->isEnabled(),chooseBox->currentIndex(),ip,port,dataArray);
 
     dataText->append(data);
     textEdit->clear();
@@ -248,7 +268,7 @@ void MainWindow::handleReadButton()
         if(type==READ_TEXT){
             QString fileContent = label->text();
             if (!fileContent.isEmpty()) {
-                textEdit->setText(fileContent);  // 将读取到的内容显示在 QtextEdit 中
+                textEdit->setText(fileContent);
             }
         }else if(type==READ_IMAGE){
             label->show();
@@ -265,15 +285,14 @@ void MainWindow::handleReadButton()
 void MainWindow::handleWriteButton()
 {
     QString content = dataText->toPlainText();
-    QString filePath = QFileDialog::getSaveFileName(this, tr("Save File"), "", tr("Text Files (*.txt);;All Files (*)"));
-    if (!filePath.isEmpty()) {
-        if( fileIO->writeFile(filePath,content)){
+    // QString filePath = QFileDialog::getSaveFileName(this, tr("Save File"), "", tr("Text Files (*.txt);;All Files (*)"));
+
+        if( fileIO->writeFile(content)){
             QMessageBox::information(this, tr("Success"), tr("Write file successfully."));
         }else{
-
             QMessageBox::information(this, tr("Error"), tr("Failed to write file."));
         }
-    }
+
 }
 
 void MainWindow::updateTextEdit(const QString& data) {
@@ -326,4 +345,28 @@ void MainWindow::handleRectangleButton()
         }
     }
 
+
+
+}
+void MainWindow::displayReceivedPicture( QByteArray &byteArray){
+
+    QString base64Image = QString::fromLatin1(byteArray.toBase64().data());
+
+    QTextCursor cursor = dataText->textCursor();
+    cursor.movePosition(QTextCursor::End);
+    // 插入文本信息
+    dataText->append("recevied msg:");
+    QString html = "<img src=\"data:image/png;base64," + base64Image + "\" width=\"200\">";
+    dataText->insertHtml(html);
+}
+void MainWindow::displaySendPicture( QByteArray &byteArray){
+
+    QString base64Image = QString::fromLatin1(byteArray.toBase64().data());
+
+    QTextCursor cursor = dataText->textCursor();
+    cursor.movePosition(QTextCursor::End);
+    // 插入文本信息
+    dataText->append("send msg:");
+    QString html = "<img src=\"data:image/png;base64," + base64Image + "\" width=\"200\">";
+    dataText->insertHtml(html);
 }

@@ -58,21 +58,63 @@ int FileIO::readFile(const QString &filePath,QLabel& label){
 
 
 
-// 写入内容到文件
-bool FileIO::writeFile(const QString &filePath, const QString &content){
-    QFile file(filePath);
 
-    if(!file.open(QIODevice::WriteOnly | QIODevice::Text)){
-        qDebug()<<"can not open";
+// 写入内容到文件
+bool FileIO::writeFile(const QString &content){
+
+    QString filePath = QFileDialog::getSaveFileName(this, tr("Save File"), "",
+                                                    tr("Image Files (*.png *.jpg *.bmp);;All Files (*)"));
+
+    if(filePath.isEmpty()){
+        QMessageBox::information(this, tr("Error"), tr("filepath is empty"));
+        return false;
+    }
+    if(filePath.endsWith("txt",Qt::CaseInsensitive)){
+        QFile file(filePath);
+
+        if(!file.open(QIODevice::WriteOnly | QIODevice::Text)){
+
+            QMessageBox::information(this, tr("Error"), tr("can not open"));
+            return false;
+        }
+
+        // 写入
+        QTextStream out (&file);
+        out<<content;
+        file.close();
+        QMessageBox::information(this, tr("Success"), tr("Write file successfully."));
+        return true;
+    }else{
+        QMessageBox::information(this, tr("Error"), tr("can not support the type"));
+        return false;
+    }
+};
+
+// 写入内容到文件
+bool FileIO::writeImageFile(QPixmap  &pixmap){
+
+    QString filePath = QFileDialog::getSaveFileName(this, tr("Save File"), "",
+                                                    tr("Image Files (*.png *.jpg *.bmp);;All Files (*)"));
+
+    if(filePath.isEmpty()){
+        QMessageBox::information(this, tr("Error"), tr("filepath is empty"));
         return false;
     }
 
-    // 写入
-    QTextStream out (&file);
-    out<<content;
-    file.close();
-    return true;
+    if(filePath.endsWith(".jpg",Qt::CaseInsensitive)||
+              filePath.endsWith(".png",Qt::CaseInsensitive )||
+              filePath.endsWith(".bmp",Qt::CaseInsensitive)){
+        if (!pixmap.save(filePath)) {
+            QMessageBox::information(this, tr("Error"), tr("Failed to save image"));
+            return false;
+        }
+        QMessageBox::information(this, tr("Success"), tr("Write file successfully."));
+        return true;
 
+    }else{
+        QMessageBox::information(this, tr("Error"), tr("can not support the type"));
+        return false;
+    }
 };
 
 // 追加内容到文件

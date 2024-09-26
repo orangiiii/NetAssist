@@ -7,6 +7,8 @@
 #include <QTextStream>
 #include <QDebug>
 #include <QLabel>
+#include <QFileDialog>
+#include <QMessageBox>
 #include "define.h"
 
 namespace Ui {
@@ -36,6 +38,8 @@ public:
     // QString readFile(const QString &filePath, QLabel &label);
 
     int readFile(const QString &filePath, QLabel &label);
+    bool writeFile(const QString &content);
+    bool writeImageFile(QPixmap &content);
 private:
     Ui::FileIO *ui;
 };

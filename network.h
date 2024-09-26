@@ -7,6 +7,7 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QUdpSocket>
+#include <QPixmap>
 
 
 
@@ -25,7 +26,7 @@ public:
     explicit Network(QWidget *parent = nullptr);
     ~Network();
 
-    void readData();
+    // void readData(QByteArray dataBuffer);
     void sendData(QString ip, quint16 port, QString data);
     // void startClientConnection(QString ip, quint16 port);
     // void startServerConnection(QString ip, quint16 port);
@@ -33,7 +34,7 @@ public:
     void onNewConnection();
     // void send(bool ifSendButton, int mode);
     void send(bool ifSendButton, int mode, QString ip, quint16 port);
-    void send(bool ifSendButton, int mode, QString ip, quint16 port, QString data);
+    void send(bool ifSendButton, int mode, QString ip, quint16 port, QByteArray data);
     void openConnection(int mode, QString ip, quint16 port,bool *ifSendButton);
     bool startServerConnection(QString ip, quint16 port);
     bool startClientConnection(QString ip, quint16 port);
@@ -41,6 +42,12 @@ public:
     void sendData(QString ip, quint16 port, QString data, int mode);
     void readTcpData();
     void readUdpData();
+    void sendPicture(QPixmap *pixmap);
+    void readPicture();
+    // void setNetwork(Network* networkInstance);
+    QByteArray getPicData(QPixmap *pixmap);
+public slots:
+    void readData(const QByteArray dataBuffer);
 private:
     Ui::Network *ui;
     QList<QTcpSocket*> clientSockets;
@@ -51,8 +58,12 @@ private:
     QUdpSocket *udpSocket;
     // MainWindow* mainWindow;
 
+    Network* network;
+
 signals:
+    void readMessage(const QByteArray& data);
     void dataReceived(const QString& data);
+    void pictureReceived(QByteArray &pixmap);
 
 };
 

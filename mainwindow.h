@@ -37,7 +37,7 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    void readData();
+    // void readData();
     void startClientConnection(QString ip, quint16 port);
     void startServerConnection(QString ip, quint16 port);
     void startUdpConnection(QString, quint16);
@@ -64,6 +64,9 @@ private slots:
     void handleCircleButton();
 
     void handleRectangleButton();
+
+    void displayReceivedPicture( QByteArray &pixmap);  // 用于显示图片的槽函数
+    void displaySendPicture( QByteArray &pixmap);
 
 
 signals:
@@ -93,6 +96,7 @@ private:
     QStatusBar *statusBar;
 
     QLabel *label;
+    QLabel *imageLabel;  // 用于显示图片
 
     // QList<QTcpSocket*> clientSockets;
     // QTcpSocket *tcpclient;
@@ -114,6 +118,8 @@ private:
     // void setMenuBar(QMenuBar *);
 
     DrawWidget *drawWidget;
+    QString ip;
+    qint64 port;
 };
 
 #endif // MAINWINDOW_H

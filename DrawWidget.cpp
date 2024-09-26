@@ -5,10 +5,14 @@
 // #include <QtMath>
 
 
-DrawWidget::DrawWidget(QMainWindow *parent) : QMainWindow(parent), drawing(false),drawingEnable(false), drawCircleEnabled(false) ,drawRectangleEnabled(false) {
+DrawWidget::DrawWidget(QMainWindow *parent) :
+    QMainWindow(parent), drawing(false),drawingEnable(false), drawCircleEnabled(false) ,drawRectangleEnabled(false) {
     setMouseTracking(true);  // 启用鼠标追踪
     setFixedSize(400, 400);  // 设置固定窗口大小
     setupToolBar();
+
+
+    fileIO = new FileIO(this);
 
 
 }
@@ -21,15 +25,22 @@ void DrawWidget::setupToolBar() {
     QAction *recAction = new QAction(QIcon(":/icons/rectangle.jpg"), "矩形", this);
     QAction *withdrawAction = new QAction(QIcon(":/icons/withdraw.jpg"), "撤回", this);
     QAction *closeAction = new QAction(QIcon(":/icons/close.jpg"), "关闭", this);
+    QAction *saveAction = new QAction(QIcon(":/icons/save.jpg"), "保存", this);
+    QAction *sendAction = new QAction(QIcon(":/icons/send.jpg"), "发送", this);
 
     toolBar->addAction(circleAction);
     toolBar->addAction(recAction);
     toolBar->addAction(withdrawAction);
     toolBar->addAction(closeAction);
+    toolBar->addAction(saveAction);
+    toolBar->addAction(sendAction);
+
     connect(circleAction,&QAction::triggered,this,&DrawWidget::enableDrawCircle);
     connect(recAction,&QAction::triggered,this,&DrawWidget::enableDrawRectangle);
     connect(withdrawAction,&QAction::triggered,this,&DrawWidget::handleWithdrawButton);
     connect(closeAction,&QAction::triggered,this,&DrawWidget::handleCloseButton);
+    connect(saveAction,&QAction::triggered,this,&DrawWidget::handleSaveButton);
+    connect(sendAction,&QAction::triggered,this,&DrawWidget::handleSendButton);
 }
 void DrawWidget::enableDrawCircle() {
     drawCircleEnabled = true;
@@ -73,52 +84,87 @@ void DrawWidget::handleCloseButton()
     drawingEnable = false;
     drawCircleEnabled = false;
 
+    this->close();
+
+}
+void DrawWidget::handleSaveButton()
+{
+    QString content ;
+    QPixmap pixmap = getPaintArea();
+    fileIO->writeImageFile(pixmap);
+
+}
+QPixmap DrawWidget::getPaintArea(){
+    // 获取绘图区域的几何信息，排除工具栏
+    QRect drawArea = this->rect();  // 获取整个窗口的矩形区域
+    int toolbarHeight = this->toolBar->height();  // 获取工具栏的高度
+    drawArea.adjust(0, toolbarHeight, 0, 0);  // 调整绘图区域，排除工具栏的高度
+
+    QPixmap pixmap(drawArea.size());  // 根据调整后的区域创建pixmap
+    pixmap.fill(Qt::white);  // 填充背景为白色
+
+    QPainter painter(&pixmap);
+    this->render(&painter, QPoint(), QRegion(drawArea));  // 只渲染绘图区域
+    painter.end();
+    return pixmap;
+}
+
+void DrawWidget::handleSendButton()
+{
+    QPixmap pixmap = getPaintArea();
+    QByteArray byteArray;
+    QBuffer buffer(&byteArray);
+    buffer.open(QIODevice::WriteOnly);
+    pixmap.save(&buffer, "PNG"); // 将图像保存为PNG格式到字节数组中
+
+    emit pictureReady(byteArray);
+    QByteArray picData=network->getPicData(&pixmap);
+    network->send(true,mode,ip,port,picData);
+
+    this->close();
+}
+
+void DrawWidget::setNetwork(Network* network){
+    this->network = network;
 }
 
 
 
-void DrawWidget::openDraw() {
-    /*
-    QPainter painter(this);
-    painter.setRenderHint(QPainter::Antialiasing);  // 启用抗锯齿
-    painter.fillRect(this->rect(), Qt::gray);*/
 
-}
 void DrawWidget::paintEvent(QPaintEvent *event) {
 
     QWidget::paintEvent(event);
     QPainter painter(this);
 
-    // if(drawingEnable){
-        painter.setRenderHint(QPainter::Antialiasing);  // 启用抗锯齿
-        // painter.fillRect(this->rect(), Qt::gray);
+    painter.setRenderHint(QPainter::Antialiasing);  // 启用抗锯齿
+    // painter.fillRect(this->rect(), Qt::gray);
 
-        // 绘制已保存的矩形
-        painter.setPen(QPen(Qt::red, 2));
-        for (const QRect &rect : rectangles) {
+    // 绘制已保存的矩形
+    painter.setPen(QPen(Qt::red, 2));
+    for (const QRect &rect : rectangles) {
+        painter.drawRect(rect);
+    }
+    // 绘制已保存的圆
+    painter.setPen(QPen(Qt::blue, 2));
+    for (int i = 0; i < circleCenters.size(); ++i) {
+        painter.drawEllipse(circleCenters[i], circleRadii[i], circleRadii[i]);
+    }
+
+    // 绘制当前正在绘制的图形
+    if (drawing) {
+        painter.setPen(QPen(Qt::green, 2));
+        QRect rect(startPoint, endPoint);
+
+        if (drawCircleEnabled) {
+            int radius = qSqrt(qPow(rect.width(), 2) + qPow(rect.height(), 2)) ;
+            painter.drawEllipse(startPoint, radius, radius);
+        }
+
+        if (drawRectangleEnabled) {
             painter.drawRect(rect);
         }
-        // 绘制已保存的圆
-        painter.setPen(QPen(Qt::blue, 2));
-        for (int i = 0; i < circleCenters.size(); ++i) {
-            painter.drawEllipse(circleCenters[i], circleRadii[i], circleRadii[i]);
-        }
+    }
 
-        // 绘制当前正在绘制的图形
-        if (drawing) {
-            painter.setPen(QPen(Qt::green, 2));
-            QRect rect(startPoint, endPoint);
-
-            if (drawCircleEnabled) {
-                int radius = qSqrt(qPow(rect.width(), 2) + qPow(rect.height(), 2)) ;
-                painter.drawEllipse(startPoint, radius, radius);
-            }
-
-            if (drawRectangleEnabled) {
-                painter.drawRect(rect);
-            }
-        }
-    // }
 
 
 }
@@ -144,7 +190,7 @@ void DrawWidget::mouseReleaseEvent(QMouseEvent *event) {
         QRect rect(startPoint, endPoint);
         if (drawCircleEnabled) {
             // 计算圆的半径并保存
-            int radius = qSqrt(qPow(rect.width(), 2) + qPow(rect.height(), 2)) / 2;
+            int radius = qSqrt(qPow(rect.width(), 2) + qPow(rect.height(), 2)) ;
             circleCenters.append(startPoint);
             circleRadii.append(radius);
             steps.append(STEP_CIRCLE);
@@ -158,4 +204,9 @@ void DrawWidget::mouseReleaseEvent(QMouseEvent *event) {
         drawing = false;  // 停止绘制
         update();  // 重新绘制
     }
+}
+void DrawWidget::initDataFromMainwin(QString ip,quint16 port,int mode){
+    this->ip=ip;
+    this->port=port;
+    this->mode=mode;
 }

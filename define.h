@@ -19,4 +19,7 @@
 #define STEP_RECTANGLE 1
 
 
+#define  TYPE_TEXT   "T"
+#define  TYPE_IMAGE   "I"
+
 #endif   // MDEFINE_H

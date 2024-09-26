@@ -1,5 +1,4 @@
 #include "network.h"
-#include "ui_network.h"
 
 Network::Network(QWidget *parent)
     : QWidget(parent){
@@ -11,6 +10,9 @@ Network::Network(QWidget *parent)
     tcpServer = new QTcpServer(this);
     udpSocket = new QUdpSocket(this);
     // clientSocket  = new QTcpSocket(this);
+
+
+
 }
 //     , ui(new Ui::Network)
 // {
@@ -19,28 +21,71 @@ Network::Network(QWidget *parent)
 
 Network::~Network()
 {
-    delete ui;
 }
-void Network::readTcpData(){
-    QByteArray buffer;
-    if(tcpclient->bytesAvailable()>0){
 
-        buffer = tcpclient->readAll();
+void Network::readData(const QByteArray buffer){
+    QByteArray type=buffer.mid(0,1);
+
+    QByteArray data;
+    data = buffer.mid(1);
+    if(TYPE_TEXT==type){
+
+        QString recstr= QString::fromUtf8(data);
+        emit dataReceived(recstr);
+        // this->ui->data->append("getMsg:");
+        // this->ui->data->append(recstr);
+    }else if(TYPE_IMAGE==type){
+        if(data.size()  < sizeof(qint64)){
+            return;
+        }
+
+        QByteArray sizeData = data.mid(0,sizeof(qint64));
+        QDataStream sizeStream(&sizeData, QIODevice::ReadOnly);
+        sizeStream.setByteOrder(QDataStream::LittleEndian);  // 显式设置为小端序
+        qint64 imageSize ;
+        sizeStream >> imageSize;
+
+        qDebug()<<(imageSize);
+        qDebug() << "Expected image size:" << imageSize;
+
+        if(data.size()<sizeof(qint64)+imageSize){
+            qDebug() << "Not enough data received to load the image.";
+            return;
+        }
+
+        // 接收图片数据
+        QByteArray imageData = data.mid(sizeof(qint64),imageSize);
+
+        // 将字节数组转换为 QPixmap
+        QPixmap pixmap;
+        pixmap.loadFromData(imageData, "PNG");  // 假设图片是以 PNG 格式发送的
+
+        // 在 QLabel 中显示图片
+        if (!pixmap.isNull()) {
+            emit pictureReceived(imageData);  // 发送信号，通知图片已接收
+        } else {
+            qDebug() << "Failed to load the image from data.";
+        }
+
     }
 
+}
+void Network::readTcpData(){
+    // 首先检查是否有可用的数据
+    if (tcpclient->bytesAvailable() < 1) {
+        return;
+    }
+    QByteArray buffer = tcpclient->readAll();
+    readData(buffer);
+}
+void Network::readUdpData(){
 
-    QString recstr= QString::fromUtf8(buffer);
-    emit dataReceived(recstr);
-    // this->ui->data->append("getMsg:");
-    // this->ui->data->append(recstr);
-
-
-}void Network::readUdpData(){
     QByteArray buffer;
     if (udpSocket->hasPendingDatagrams()) {
         qint64 datagramSize = udpSocket->pendingDatagramSize();
         qDebug() << "datagram size: " << datagramSize;
         buffer.resize(datagramSize);
+
         udpSocket->readDatagram(buffer.data(), buffer.size());
         qDebug() << "Received data: " << buffer;
 
@@ -62,12 +107,7 @@ void Network::readTcpData(){
 
 bool Network::startClientConnection(    QString ip,
                                        quint16 port){
-    // // 会不会太晚?
-    // if(!tcpclient){
-    //     // cpp中实例化对象, .h种添加私有成员对象
-    //     tcpclient = new QTcpSocket(this);
-    // }
-    //未连接状态  去连接
+     //未连接状态  去连接
     if(tcpclient->state() != QAbstractSocket::ConnectedState) {
         //连接服务器
         tcpclient->connectToHost(ip,port);
@@ -80,9 +120,7 @@ bool Network::startClientConnection(    QString ip,
         connect(tcpclient,&QTcpSocket::readyRead,this,&Network::readTcpData);
 
         return true;
-    }
-    //已连接状态 去断开
-    else {
+    }else {
         //断开服务器
         tcpclient->disconnectFromHost();
     }
@@ -150,13 +188,15 @@ void Network::onNewConnection(){
     clientSockets.append(newClientSocket);
     qDebug() << "New client connected!";
 
-    // 当客户端发送数据时，处理数据
-    // 可能要改一下
+
     connect(newClientSocket, &QTcpSocket::readyRead, this, [this,newClientSocket]() {
-        QByteArray data = newClientSocket->readAll();
-        qDebug() << "data received from client: " << data;
-        QString recstr = QString::fromUtf8(data);
-        emit dataReceived(recstr);
+        // 首先检查是否有可用的数据
+        if (newClientSocket->bytesAvailable() > 1) {
+            QByteArray data = newClientSocket->readAll();
+            qDebug() << "data received from client " ;
+
+            emit readMessage(data);
+        }
     });
 
     // 当客户端断开连接时，清理资源
@@ -168,7 +208,7 @@ void Network::onNewConnection(){
 
 }
 
-void Network::send(bool ifSendButton,int mode,QString ip,quint16 port,QString data)
+void Network::send(bool ifSendButton,int mode,QString ip,quint16 port,QByteArray data)
 
 {
 
@@ -177,33 +217,33 @@ void Network::send(bool ifSendButton,int mode,QString ip,quint16 port,QString da
         return;
     }
 
-    QByteArray buffer = data.toUtf8();
+
     // 当前连接的客户端的 QTcpSocket
     if(mode==TCP_SERVER_MODE){
         for (QTcpSocket *clientSocket:clientSockets) {
             if(clientSocket->isOpen()){
-                clientSocket->write(buffer);
+                clientSocket->write(data);
                 clientSocket->flush();  // 确保数据立即发送
+
+                qDebug() << "data send from server " ;
             }else {
                 qDebug() << "socket is closed.";
             }
 
         }
     }else if(mode==TCP_CLIENT_MODE){
-        tcpclient->write(buffer);
+        tcpclient->write(data);
         tcpclient->flush();
+        qDebug() << "data send from client " ;
     }else if(mode==UDP_MODE){
         // 发送数据
         // 这里的ip端口 组播,后期再改
-        // udpSocket->writeDatagram(buffer,QHostAddress::Broadcast,port);
-        udpSocket->writeDatagram(buffer,QHostAddress::Broadcast,port);
+        udpSocket->writeDatagram(data,QHostAddress::Broadcast,port);
         // debug
-        qDebug() << "data sent(udp): " << data;
+        qDebug() << "data sent(udp): " << data.toStdString();
     }
 
 
-    // debug
-    qDebug() << "data sent from server to client: " << data;
 }
 
 void Network::openConnection(int mode,QString ip,quint16 port,bool *ifSendButton)
@@ -221,3 +261,64 @@ void Network::openConnection(int mode,QString ip,quint16 port,bool *ifSendButton
     }
 
 }
+
+QByteArray Network::getPicData(QPixmap* pixmap){
+
+    // 将Pixmap保存为字节数组（QByteArray）
+    QByteArray byteArray;
+    QBuffer buffer(&byteArray);
+    buffer.open(QIODevice::WriteOnly);
+    pixmap->save(&buffer, "PNG"); // 将图像保存为PNG格式到字节数组中
+
+    // 获取数据大小
+    qint64 byteArraySize = byteArray.size();
+
+    qDebug()<<(sizeof(qint64));
+    // 发送数据大小，方便接收端知道要接收多少数据
+    QByteArray sizeData;
+    QDataStream sizeStream(&sizeData, QIODevice::WriteOnly);
+    sizeStream.setByteOrder(QDataStream::LittleEndian);  // 显式设置为小端序
+    sizeStream << byteArraySize;
+
+    qDebug()<<(byteArraySize);
+    QByteArray finalData;
+    finalData.append(TYPE_IMAGE);
+    finalData.append(sizeData);
+    finalData.append(byteArray);
+
+    return finalData;
+}
+
+// void Network::readPicture(){
+
+//         // if(tcpclient->bytesAvailable()  < (sizeof(qint64)+1)){
+//         //     return;
+//         // }
+//         QByteArray sizeData = tcpclient->read(sizeof(qint64));
+//         QDataStream sizeStream(&sizeData,QIODevice::ReadOnly);
+//         qint64 imageSize = 0;
+//         sizeStream>>imageSize;
+//         qDebug() << "Expected image size:" << imageSize;
+
+//         // 检查是否有足够的数据来读取图片
+//         if (tcpclient->bytesAvailable() < imageSize) {
+//             return;  // 如果数据还不完整，返回等待
+//         }
+
+//         // 接收图片数据
+//         QByteArray imageData = tcpclient->read(imageSize);
+
+//         // 将字节数组转换为 QPixmap
+//         QPixmap pixmap;
+//         pixmap.loadFromData(imageData, "PNG");  // 假设图片是以 PNG 格式发送的
+
+//         // 在 QLabel 中显示图片
+//         if (!pixmap.isNull()) {
+//             emit pictureReceived(imageData);  // 发送信号，通知图片已接收
+//         } else {
+//             qDebug() << "Failed to load the image from data.";
+//         }
+
+
+
+// }
