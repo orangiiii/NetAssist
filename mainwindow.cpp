@@ -299,6 +299,11 @@ void MainWindow::handleSendButton()
     // qDebug()<<sendButton->isEnabled();
 
     QString oriData(textEdit->toPlainText());
+    // 检查消息是否为空
+    if (oriData.trimmed().isEmpty()) {
+        QMessageBox::warning(this, "error", "无法发送空消息！");
+        return;
+    }
     QString data = "send msg:\n"+ oriData;
     QString ip = IP_TEST;
     quint16 port = PORT_TEST;
