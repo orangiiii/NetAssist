@@ -50,6 +50,8 @@ public:
     void handleDrawCircleButton();
     void handleDrawRectangleButton();
     void handleCloseButton();
+    void showCustomContextMenu(const QPoint &pos);
+    void clearDataText();
 private slots:
     void handleOpenButton();
 

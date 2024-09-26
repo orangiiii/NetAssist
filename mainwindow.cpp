@@ -3,7 +3,7 @@
 // #include "ui_clientwin.h"
 #include <QWidget>
 #include "define.h"
-#include <QFiledialog>
+#include <QGroupBox>
 // #include "clientwin.h"
 
 #include <QApplication>
@@ -63,53 +63,89 @@ MainWindow::~MainWindow()
 
 void MainWindow::setupUi()
 {
-    this->resize(500, 350);
+    // 主窗口的水平布局
+    QHBoxLayout *mainLayout = new QHBoxLayout();
 
-    // 创建控件
-    ipLabel = new QLabel(this);
-    ipLabel->setGeometry(QRect(30, 110, 69, 19));
+    // 左边红色区域的布局（连接设置部分）
+    QGroupBox *connectionGroupBox = new QGroupBox("连接设置");
+    QGridLayout *connectionLayout = new QGridLayout();
 
-    portLabel = new QLabel(this);
-    portLabel->setGeometry(QRect(30, 160, 69, 19));
-
+    // 初始化控件
+    ipLabel = new QLabel("IP:", this);
     ipLine = new QLineEdit(this);
-    ipLine->setGeometry(QRect(70, 100, 113, 25));
-
+    portLabel = new QLabel("Port:", this);
     portLine = new QLineEdit(this);
-    portLine->setGeometry(QRect(70, 160, 113, 25));
+    openButton = new QPushButton("连接", this);
+    createButton = new QPushButton("创建", this);
 
-    openButton = new QPushButton(this);
-    openButton->setGeometry(QRect(60, 200, 93, 28));
-    openButton->setCheckable(true);
-
-    dataText = new QTextBrowser(this);
-    dataText->setGeometry(QRect(190, 30, 250, 150));
-
-    textEdit = new QTextEdit(this);
-    textEdit->setGeometry(QRect(190, 200, 250, 75));
-
-    sendButton = new QPushButton(this);
-    sendButton->setGeometry(QRect(350, 280, 90, 25));
-    sendButton->setCheckable(true);
+    // 设置按钮的固定宽度，保证按钮大小一致
+    openButton->setFixedWidth(200);
+    createButton->setFixedWidth(200);
 
     chooseBox = new QComboBox(this);
-    chooseBox->setGeometry(QRect(40, 60, 121, 25));
-    chooseBox->addItem(QString());
-    chooseBox->addItem(QString());
-    chooseBox->addItem(QString());
+    chooseBox->addItem("tcp client");
+    chooseBox->addItem("tcp server");
+    chooseBox->addItem("udp");
 
-    createButton = new QPushButton(this);
-    createButton->setGeometry(QRect(10, 250, 93, 28));
 
-    readButton = new QPushButton(this);
-    readButton->setGeometry(QRect(190, 180, 90, 20));
-    readButton->setCheckable(true);
+    // 调整控件的对齐方式和布局
+    connectionLayout->addWidget(new QLabel("选择模式:"), 0, 0);
+    connectionLayout->addWidget(chooseBox, 0, 1);
 
-    writeButton = new QPushButton(this);
-    writeButton->setGeometry(QRect(350, 180, 90, 20));
-    writeButton->setCheckable(true);
+    connectionLayout->addWidget(ipLabel, 1, 0);
+    connectionLayout->addWidget(ipLine, 1, 1);
 
-    QMetaObject::connectSlotsByName(this);
+    connectionLayout->setRowMinimumHeight(1, 30);  // 控制 IP 和 Port 之间的间距
+
+    connectionLayout->addWidget(portLabel, 2, 0);
+    connectionLayout->addWidget(portLine, 2, 1);
+
+
+    connectionLayout->addWidget(openButton, 3, 0, 1, 2, Qt::AlignCenter);  // 设置按钮居中对齐
+    connectionLayout->setRowMinimumHeight(3, 30);  // 控制 connect 和 创建按钮的间距
+
+    connectionLayout->addWidget(createButton, 4, 0, 1, 2, Qt::AlignCenter);  // 设置按钮居中对齐
+
+    connectionLayout->setSpacing(10);  // 设置控件之间的默认间距
+    connectionLayout->setContentsMargins(10, 10, 10, 10);  // 设置布局的外部间距
+    connectionGroupBox->setLayout(connectionLayout);
+    connectionLayout->setVerticalSpacing(30);  // 控制每行之间的垂直间距
+
+    // 右边红色区域（数据接收和发送部分）
+    QGroupBox *dataReceiveGroupBox = new QGroupBox("数据接收");
+    QVBoxLayout *dataReceiveLayout = new QVBoxLayout();
+    dataText = new QTextBrowser(this);
+    textEdit = new QTextEdit(this);
+    sendButton = new QPushButton("发送", this);
+
+    QHBoxLayout *buttonLayout = new QHBoxLayout();
+    readButton = new QPushButton("read", this);
+    writeButton = new QPushButton("write", this);
+    buttonLayout->addWidget(readButton);
+    buttonLayout->addWidget(writeButton);
+
+    // 将接收和发送部分布局
+    dataReceiveLayout->addWidget(dataText);   // 上方的文本接收框
+    dataReceiveLayout->addLayout(buttonLayout); // 放置 read 和 write 按钮
+    textEdit->setFixedHeight(80); // 调整红色区域的高度
+    dataReceiveLayout->addWidget(textEdit);  // 发送文本框
+    dataReceiveLayout->addWidget(sendButton); // 发送按钮
+    dataReceiveGroupBox->setLayout(dataReceiveLayout);
+
+    // 设置主布局为水平布局
+    mainLayout->addWidget(connectionGroupBox);  // 左边连接设置
+    mainLayout->addWidget(dataReceiveGroupBox); // 右边数据接收发送
+
+    // 设置中心组件
+    QWidget *centralWidget = new QWidget(this);
+    centralWidget->setLayout(mainLayout);
+    setCentralWidget(centralWidget);
+
+    // 设置右键菜单清空功能
+    dataText->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(dataText, &QTextBrowser::customContextMenuRequested, this, &MainWindow::showCustomContextMenu);
+    // 设置窗口大小并禁止调整大小
+    this->setFixedSize(550, 500);  // 设置窗口固定大小
 }
 
 void MainWindow::retranslateUi()
@@ -117,7 +153,7 @@ void MainWindow::retranslateUi()
     this->setWindowTitle(QCoreApplication::translate("MainWindow", "Form", nullptr));
     ipLabel->setText(QCoreApplication::translate("MainWindow", "ip", nullptr));
     portLabel->setText(QCoreApplication::translate("MainWindow", "port", nullptr));
-    openButton->setText(QCoreApplication::translate("MainWindow", "open", nullptr));
+    openButton->setText(QCoreApplication::translate("MainWindow", "connect", nullptr));
     sendButton->setText(QCoreApplication::translate("MainWindow", "send", nullptr));
     chooseBox->setItemText(0, QCoreApplication::translate("MainWindow", "tcp client", nullptr));
     chooseBox->setItemText(1, QCoreApplication::translate("MainWindow", "tcp server", nullptr));
@@ -140,6 +176,18 @@ void MainWindow::setupMenuBar() {
 
     connect(openAction,&QAction::triggered,this,&MainWindow::handleReadButton);
     connect(saveAction,&QAction::triggered,this,&MainWindow::handleWriteButton);
+
+
+    QMenu *drawMenu = new QMenu("绘图", this);
+    menuBar->addMenu(drawMenu);
+    QAction *circleAction = new QAction("圆", this);
+    QAction *rectangleAction = new QAction("矩形", this);
+    drawMenu->addAction(circleAction);
+    drawMenu->addAction(rectangleAction);
+
+    connect(circleAction,&QAction::triggered,this,&MainWindow::handleDrawCircleButton);
+    connect(rectangleAction,&QAction::triggered,this,&MainWindow::handleDrawRectangleButton);
+
 }
 
 
@@ -182,6 +230,20 @@ void MainWindow::contextMenuEvent(QContextMenuEvent *event) {
 
     // 在鼠标右键点击的位置显示菜单
     contextMenu.exec(event->globalPos());
+}
+void MainWindow::showCustomContextMenu(const QPoint &pos)
+{
+    QMenu contextMenu(tr("Context menu"), this);
+
+    QAction actionClear("清空", this);
+    connect(&actionClear, &QAction::triggered, this, &MainWindow::clearDataText);
+    contextMenu.addAction(&actionClear);
+
+    contextMenu.exec(dataText->mapToGlobal(pos));
+}
+void MainWindow::clearDataText()
+{
+    dataText->clear();
 }
 
 
