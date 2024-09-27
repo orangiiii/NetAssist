@@ -313,7 +313,7 @@ void MainWindow::handleSendButton()
         QMessageBox::warning(this, "error", "无法发送空消息！");
         return;
     }
-    QString data = "send msg:\n"+ oriData;
+    QString data = "Send msg:\n"+ oriData;
     QString ip = IP_TEST;
     quint16 port = PORT_TEST;
     // QString ip = ipLine->text();
@@ -404,7 +404,7 @@ void MainWindow::handleWriteButton()
 }
 
 void MainWindow::updateTextEdit(const QString& data) {
-    dataText->append("Received message:");
+    dataText->append("Received msg:");
     dataText->append(data);  // 将数据添加到 QTextEdit 中
 
     dataText->moveCursor(QTextCursor::End);
@@ -417,7 +417,7 @@ void MainWindow::displayReceivedPicture( QByteArray &byteArray){
 
     // 插入文本信息
     QString blank = "<br>";
-    QString html = "send msg:<br><img src=\"data:image/png;base64," + base64Image + "\" width=\"200\">";
+    QString html = "Received msg:<br><img src=\"data:image/png;base64," + base64Image + "\" width=\"200\">";
     if(dataText->toPlainText().trimmed().length()!=0){
         html=blank+html;
     }
@@ -432,7 +432,7 @@ void MainWindow::displaySendPicture( QByteArray &byteArray){
 
     // 插入文本信息
     QString blank = "<br>";
-    QString html = "send msg:<br><img src=\"data:image/png;base64," + base64Image + "\" width=\"200\">";
+    QString html = "Send msg:<br><img src=\"data:image/png;base64," + base64Image + "\" width=\"200\">";
     if(dataText->toPlainText().trimmed().length()!=0){
         html=blank+html;
     }

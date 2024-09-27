@@ -11,10 +11,9 @@ Network::Network(QWidget *parent)
 Network::~Network()
 {
 }
-static bool ifFirst=true;
-static QString type;
+
 void Network::readData(const QByteArray buffer){
-    static QByteArray accumulatedData; // 用于累积接收到的分包数据
+    // static QByteArray accumulatedData; // 用于累积接收到的分包数据
     if(ifFirst){
         type=buffer.mid(0,1);
         accumulatedData.append(buffer.mid(1));
@@ -130,7 +129,7 @@ bool Network::startClientConnection(    QString ip,
         tcpclient->connectToHost(ip,port);
         //等待连接成功
         if(!tcpclient->waitForConnected(20000)) {
-            qDebug() << "连接失败,请检查服务器是否启动!";
+            qDebug() << "Connection failed!";
             return false;
         }
         // 检查连接状态
@@ -138,7 +137,7 @@ bool Network::startClientConnection(    QString ip,
             connect(tcpclient, &QTcpSocket::readyRead, this, &Network::readTcpData);
             return true;
         } else {
-            qDebug() << "连接失败!";
+            qDebug() << "Failed to establish connection!";
             return false;
         }
 
@@ -286,7 +285,9 @@ void Network::openConnection(int mode,QString ip,quint16 port,bool *ifSendButton
 }
 bool Network::socketValid(QString ip,quint16 port){
     QHostAddress address;
-    return port > 0 && port <= 65535&&address.setAddress(ip);
+    if(port > 0 && port <= 65535&&address.setAddress(ip)){
+
+    }
 }
 
 QByteArray Network::getPicData(QPixmap* pixmap){

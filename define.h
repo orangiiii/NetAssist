@@ -11,6 +11,7 @@
 #define  DATA_FILE_STREAM   2
 #define  IP_TEST   "127.0.0.1"
 #define  PORT_TEST   12138
+#define  UDP_SERVER_PORT   12138
 #define  READ_ERROR 0
 #define  READ_TEXT   1
 #define  READ_IMAGE   2

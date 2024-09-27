@@ -54,6 +54,8 @@ public:
         return ifConnected;
     };
     bool socketValid(QString ip, quint16 port);
+    void startUdpServer(quint16 port);
+    void readUdpData2();
 public slots:
     void readData(const QByteArray dataBuffer);
 private:
@@ -66,10 +68,14 @@ private:
     QUdpSocket *udpSocket;
     // MainWindow* mainWindow;
 
-    Network* network;
+    qint64 storedImageSize = 0;
+    // Network* network;
+    QByteArray accumulatedData;
+    QString type;
+    // QTcpSocket* tcpSocket;
+    bool ifFirst=true;
 
     bool ifConnected=false;
-    qint64 storedImageSize = 0;  // 保存图像大小的成员变量
 
 signals:
     void readMessage(const QByteArray& data);
