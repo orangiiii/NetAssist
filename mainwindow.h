@@ -18,6 +18,7 @@
 #include <QTextEdit>
 #include <QComboBox>
 #include <QPixmap>
+#include <QScrollBar>
 
 #include "clientwin.h"
 #include "fileio.h"

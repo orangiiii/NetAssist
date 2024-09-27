@@ -322,6 +322,10 @@ void MainWindow::handleSendButton()
 
     dataText->append(data);
     textEdit->clear();
+    // 自动滚动到最后一行
+    // dataText->verticalScrollBar()->setValue(dataText->verticalScrollBar()->maximum());
+    dataText->moveCursor(QTextCursor::End);
+
 }
 
 void MainWindow::timeout(){
@@ -397,27 +401,38 @@ void MainWindow::handleWriteButton()
 void MainWindow::updateTextEdit(const QString& data) {
     dataText->append("Received message:");
     dataText->append(data);  // 将数据添加到 QTextEdit 中
+
+    dataText->moveCursor(QTextCursor::End);
 }
 
 void MainWindow::displayReceivedPicture( QByteArray &byteArray){
 
     QString base64Image = QString::fromLatin1(byteArray.toBase64().data());
 
-    QTextCursor cursor = dataText->textCursor();
-    cursor.movePosition(QTextCursor::End);
+
     // 插入文本信息
-    dataText->append("recevied msg:\n");
-    QString html = "<img src=\"data:image/png;base64," + base64Image + "\" width=\"200\">";
+    QString blank = "<br>";
+    QString html = "send msg:<br><img src=\"data:image/png;base64," + base64Image + "\" width=\"200\">";
+    if(dataText->toPlainText().trimmed().length()!=0){
+        html=blank+html;
+    }
     dataText->insertHtml(html);
+    // QTextCursor cursor = dataText->textCursor();
+    // cursor.movePosition(QTextCursor::End);
+        dataText->moveCursor(QTextCursor::End);
 }
 void MainWindow::displaySendPicture( QByteArray &byteArray){
 
     QString base64Image = QString::fromLatin1(byteArray.toBase64().data());
 
-    QTextCursor cursor = dataText->textCursor();
-    cursor.movePosition(QTextCursor::End);
     // 插入文本信息
-    dataText->append("send msg:\n");
-    QString html = "<img src=\"data:image/png;base64," + base64Image + "\" width=\"200\">";
+    QString blank = "<br>";
+    QString html = "send msg:<br><img src=\"data:image/png;base64," + base64Image + "\" width=\"200\">";
+    if(dataText->toPlainText().trimmed().length()!=0){
+        html=blank+html;
+    }
     dataText->insertHtml(html);
+    // QTextCursor cursor = dataText->textCursor();
+    // cursor.movePosition(QTextCursor::End);
+        dataText->moveCursor(QTextCursor::End);
 }

@@ -25,69 +25,66 @@ void Network::readData(const QByteArray buffer){
     if(TYPE_TEXT==type){
         QString recstr = QString::fromUtf8(accumulatedData);
         emit dataReceived(recstr);
-        accumulatedData.clear();  // 处理完毕，清空累积数据
+        accumulatedData.clear();  // 清空累积数据
     }else if(TYPE_IMAGE==type){
-        if(accumulatedData.size()  < sizeof(qint64)){
-            ifFirst=false;
-            return;
-        }
+
 
         if(ifFirst){
+            if(accumulatedData.size()  < sizeof(qint64)){
+                ifFirst=false;
+                return;
+            }
             QByteArray sizeData = accumulatedData.mid(0,sizeof(qint64));
             QDataStream sizeStream(&sizeData, QIODevice::ReadOnly);
             sizeStream.setByteOrder(QDataStream::LittleEndian);  // 显式设置为小端序
             qint64 imageSize ;
             sizeStream >> imageSize;
-            qDebug()<<(imageSize);
+            qDebug()<< imageSize ;
             storedImageSize = imageSize;  // 保存图像大小
             qDebug() << "Expected image size:" << imageSize;
+
             if((accumulatedData.size()<sizeof(qint64)+imageSize)){
                 qDebug() << "Not enough data received to load the image.";
                 ifFirst=false;
                 return;
             }
-            // 提取图像数据
-            QByteArray imageData = accumulatedData.mid(0, imageSize);
+            QByteArray imageData = accumulatedData.mid(sizeof(qint64), imageSize);
 
-            // 将字节数组转换为 QPixmap
             QPixmap pixmap;
             pixmap.loadFromData(imageData, "PNG");
 
             if (!pixmap.isNull()) {
-                emit pictureReceived(imageData);  // 发送信号，通知图片已接收
+                emit pictureReceived(imageData);
             } else {
                 qDebug() << "Failed to load the image from data.";
             }
 
-            // 清除已经处理的数据
-            accumulatedData = accumulatedData.mid(imageSize);
-            ifFirst = true;  // 重置标志位
+            accumulatedData = accumulatedData.mid(imageSize+sizeof(qint64));
+            ifFirst = true;
         }else{
             qint64 imageSize=storedImageSize;
-            if(accumulatedData.size()<imageSize){
+            if(accumulatedData.size()<imageSize+sizeof(qint64)){
                 qDebug()<<"waiting for data";
                 return;
             }
             // 提取图像数据
             QByteArray imageData = accumulatedData.mid(sizeof(qint64), imageSize);
-
-            // 将字节数组转换为 QPixmap
             QPixmap pixmap;
             pixmap.loadFromData(imageData, "PNG");
 
             if (!pixmap.isNull()) {
-                emit pictureReceived(imageData);  // 发送信号，通知图片已接收
+                emit pictureReceived(imageData);
             } else {
                 qDebug() << "Failed to load the image from data.";
             }
 
-            // 清除已经处理的数据
-            accumulatedData = accumulatedData.mid(imageSize);
-            ifFirst = true;  // 重置标志位
+            accumulatedData = accumulatedData.mid(imageSize+sizeof(qint64));
+            ifFirst = true;
         }
 
 
     }
+
 
 }
 void Network::readTcpData(){
