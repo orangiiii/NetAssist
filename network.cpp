@@ -129,14 +129,19 @@ bool Network::startClientConnection(    QString ip,
         //连接服务器
         tcpclient->connectToHost(ip,port);
         //等待连接成功
-        if(!tcpclient->waitForConnected(30000)) {
-            qDebug() << "Connection failed!";
+        if(!tcpclient->waitForConnected(20000)) {
+            qDebug() << "连接失败,请检查服务器是否启动!";
             return false;
         }
-        // connect
-        connect(tcpclient,&QTcpSocket::readyRead,this,&Network::readTcpData);
+        // 检查连接状态
+        if (tcpclient->state() == QAbstractSocket::ConnectedState) {
+            connect(tcpclient, &QTcpSocket::readyRead, this, &Network::readTcpData);
+            return true;
+        } else {
+            qDebug() << "连接失败!";
+            return false;
+        }
 
-        return true;
     }else {
         //断开服务器
         tcpclient->disconnectFromHost();
@@ -266,6 +271,7 @@ void Network::send(bool ifSendButton,int mode,QString ip,quint16 port,QByteArray
 void Network::openConnection(int mode,QString ip,quint16 port,bool *ifSendButton)
 
 {
+
     if(mode==UDP_MODE){
         qDebug()<<"UDP_MODE";
         *ifSendButton = startUdpConnection(ip,port);
@@ -277,6 +283,10 @@ void Network::openConnection(int mode,QString ip,quint16 port,bool *ifSendButton
         *ifSendButton =startServerConnection(ip,port);
     }
 
+}
+bool Network::socketValid(QString ip,quint16 port){
+    QHostAddress address;
+    return port > 0 && port <= 65535&&address.setAddress(ip);
 }
 
 QByteArray Network::getPicData(QPixmap* pixmap){

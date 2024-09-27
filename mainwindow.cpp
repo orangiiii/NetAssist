@@ -17,11 +17,8 @@ MainWindow::MainWindow(QWidget *parent)
     imageLabel(new QLabel(this)),// 初始化 QLabel
     drawWidget(new DrawWidget(this))
 {
-    QString ip = IP_TEST;
-    quint16 port = PORT_TEST;
-    // QString ip = ipLine->text();
-    // QString port =portLine->text().toUShort();
-    // setupUi(this);
+    ip = IP_TEST;
+    port = PORT_TEST;
 
     setupUi();
     retranslateUi();
@@ -249,22 +246,30 @@ void MainWindow::clearDataText()
 
 void MainWindow::handleOpenButton()
 {
-
-    QString ip = IP_TEST;
-    quint16 port = PORT_TEST;
-    // QString ip = ipLine->text();
-    // QString port =portLine->text().toUShort();
+    if(!ipLine->text().isEmpty()){
+        ip = ipLine->text();
+    }
+    if(!portLine->text().isEmpty()){
+        port =portLine->text().toUShort();
+    }
     bool ifSendButton = false;
+    if(!network->socketValid(ip,port)){
+        QMessageBox::information(this,tr("Error"),tr("Wrong socket."));
+        return;
+    }
     network->openConnection(chooseBox->currentIndex(),ip,port,&ifSendButton);
     if(ifSendButton){
         sendButton->setEnabled(true);
         openButton->setText("已连接");
         network->setIfConnected(true);
+        chooseBox->setEnabled(false);
 
     }else{
 
+        sendButton->setEnabled(false);
         openButton->setText("点击连接");
         network->setIfConnected(false);
+        chooseBox->setEnabled(true);
     }
 
 

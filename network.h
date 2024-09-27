@@ -53,6 +53,7 @@ public:
     bool getIfConnected(){
         return ifConnected;
     };
+    bool socketValid(QString ip, quint16 port);
 public slots:
     void readData(const QByteArray dataBuffer);
 private:
