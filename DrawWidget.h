@@ -8,7 +8,7 @@
 #include <QMenuBar>
 #include <QToolBar>
 #include <QFileDialog>
-#include <fileio.h>
+#include "fileio.h"
 #include "network.h"
 
 class DrawWidget : public QMainWindow {
@@ -28,6 +28,9 @@ public:
     QPixmap getPaintArea();
     void setNetwork(Network *network);
     void initDataFromMainwin(QString ip,quint16 port,int mode);
+    void setText(const QString &text);
+    QString getText() const;
+    void setImage(const QPixmap image);
 protected:
     void paintEvent(QPaintEvent *event) override;  // 重写绘制事件
     void mousePressEvent(QMouseEvent *event) override;  // 鼠标按下事件
@@ -58,6 +61,9 @@ private:
     QString ip;
     quint16 port;
     int mode;
+    QString currentText;
+    QPixmap currentImage;// ?
+
 
 
 };

@@ -13,6 +13,7 @@ DrawWidget::DrawWidget(QMainWindow *parent) :
 
     fileIO = new FileIO(this);
 
+
 }
 // 初始化工具栏
 void DrawWidget::setupToolBar() {
@@ -148,8 +149,13 @@ void DrawWidget::paintEvent(QPaintEvent *event) {
     QWidget::paintEvent(event);
     QPainter painter(this);
 
+
     painter.setRenderHint(QPainter::Antialiasing);  // 启用抗锯齿
     // painter.fillRect(this->rect(), Qt::gray);
+
+    if(!currentImage.isNull()){
+        painter.drawPixmap(rect(),currentImage);
+    }
 
     // 绘制已保存的矩形
     painter.setPen(QPen(Qt::red, 2));
@@ -161,7 +167,6 @@ void DrawWidget::paintEvent(QPaintEvent *event) {
     for (int i = 0; i < circleCenters.size(); ++i) {
         painter.drawEllipse(circleCenters[i], circleRadii[i], circleRadii[i]);
     }
-
     // 绘制当前正在绘制的图形
     if (drawing) {
         painter.setPen(QPen(Qt::green, 2));
@@ -222,3 +227,21 @@ void DrawWidget::initDataFromMainwin(QString ip,quint16 port,int mode){
     this->port=port;
     this->mode=mode;
 }
+
+// 设置文本显示
+void DrawWidget::setText(const QString &text) {
+    currentText = text;
+    update();  // 重新绘制
+}
+
+// 获取当前显示的文本
+QString DrawWidget::getText() const {
+    return currentText;
+}
+
+// 设置图片显示
+void DrawWidget::setImage(const QPixmap image) {
+    currentImage = image;
+    update();  // 重新绘制
+}
+

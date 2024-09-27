@@ -289,10 +289,10 @@ void MainWindow::handleDrawCircleButton()
 }
 void MainWindow::handleDrawRectangleButton()
 {
-    drawWidget->show();
     drawWidget->enableDrawRectangle();
     drawWidget->setNetwork(this->network);
     drawWidget->initDataFromMainwin(ip, port,chooseBox->currentIndex());
+    drawWidget->show();
 
 }
 
@@ -332,23 +332,35 @@ void MainWindow::timeout(){
 void MainWindow::handleReadButton()
 {
     QString filePath = QFileDialog::getOpenFileName(this, tr("Open File"), "", tr("Text Files (*.txt);;Image Files (*.png *.jpg *.bmp);;All Files (*)"));
-    if (!filePath.isEmpty()) {
+    if(filePath.isEmpty()){
+        return;
+    }
 
-        label->setFixedSize(400, 400);
-        int type = fileIO->readFile(filePath,*label);
+        drawWidget->setFixedSize(400, 400);
+        drawWidget->setNetwork(this->network);
+        drawWidget->initDataFromMainwin(ip, port,chooseBox->currentIndex());
+        int type = fileIO->getFileType(filePath);
         if(type==READ_TEXT){
-            QString fileContent = label->text();
+            QString fileContent = fileIO->readFile(filePath);
             if (!fileContent.isEmpty()) {
                 textEdit->setText(fileContent);
             }
         }else if(type==READ_IMAGE){
-            label->show();
+            QPixmap pixmap(filePath);
+            if(!pixmap.isNull()){
+                drawWidget->setImage(pixmap);
+                drawWidget->show();
+
+            }else{
+                QMessageBox::information(this,tr("Error"),tr("can not load the picture"));
+            }
+
         }else{
 
-            label->setFixedSize(200, 50);
-            label->show();
+            drawWidget->setFixedSize(200, 50);
+            drawWidget->show();
         }
-    }
+
 
 }
 
@@ -388,53 +400,51 @@ void MainWindow::updateTextEdit(const QString& data) {
 }
 
 
-void MainWindow::handleCircleButton()
-{
-    QString filePath = QFileDialog::getOpenFileName(this, tr("Open File"), "", tr("Text Files (*.txt);;Image Files (*.png *.jpg *.bmp);;All Files (*)"));
-    if (!filePath.isEmpty()) {
+// void MainWindow::handleCircleButton()
+// {
+//     QString filePath = QFileDialog::getOpenFileName(this, tr("Open File"), "", tr("Text Files (*.txt);;Image Files (*.png *.jpg *.bmp);;All Files (*)"));
+//     if (!filePath.isEmpty()) {
 
-        label->setFixedSize(400, 400);
-        int type = fileIO->readFile(filePath,*label);
-        if(type==READ_TEXT){
-            QString fileContent = label->text();
-            if (!fileContent.isEmpty()) {
-                textEdit->setText(fileContent);  // 将读取到的内容显示在 QtextEdit 中
-            }
-        }else if(type==READ_IMAGE){
-            label->show();
-        }else{
+//         label->setFixedSize(400, 400);
+//         int type = fileIO->readFile(filePath,*label);
+//         if(type==READ_TEXT){
+//             QString fileContent = label->text();
+//             if (!fileContent.isEmpty()) {
+//                 textEdit->setText(fileContent);  // 将读取到的内容显示在 QtextEdit 中
+//             }
+//         }else if(type==READ_IMAGE){
+//             label->show();
+//         }else{
 
-            label->setFixedSize(200, 50);
-            label->show();
-        }
-    }
+//             label->setFixedSize(200, 50);
+//             label->show();
+//         }
+//     }
 
-}
+// }
 
-void MainWindow::handleRectangleButton()
-{
-    QString filePath = QFileDialog::getOpenFileName(this, tr("Open File"), "", tr("Text Files (*.txt);;Image Files (*.png *.jpg *.bmp);;All Files (*)"));
-    if (!filePath.isEmpty()) {
+// void MainWindow::handleRectangleButton()
+// {
+//     QString filePath = QFileDialog::getOpenFileName(this, tr("Open File"), "", tr("Text Files (*.txt);;Image Files (*.png *.jpg *.bmp);;All Files (*)"));
+//     if (!filePath.isEmpty()) {
 
-        label->setFixedSize(400, 400);
-        int type = fileIO->readFile(filePath,*label);
-        if(type==READ_TEXT){
-            QString fileContent = label->text();
-            if (!fileContent.isEmpty()) {
-                textEdit->setText(fileContent);  // 将读取到的内容显示在 QtextEdit 中
-            }
-        }else if(type==READ_IMAGE){
-            label->show();
-        }else{
+//         label->setFixedSize(400, 400);
+//         int type = fileIO->readFile(filePath,*label);
+//         if(type==READ_TEXT){
+//             QString fileContent = label->text();
+//             if (!fileContent.isEmpty()) {
+//                 textEdit->setText(fileContent);  // 将读取到的内容显示在 QtextEdit 中
+//             }
+//         }else if(type==READ_IMAGE){
+//             label->show();
+//         }else{
 
-            label->setFixedSize(200, 50);
-            label->show();
-        }
-    }
+//             label->setFixedSize(200, 50);
+//             label->show();
+//         }
+//     }
+// }
 
-
-
-}
 void MainWindow::displayReceivedPicture( QByteArray &byteArray){
 
     QString base64Image = QString::fromLatin1(byteArray.toBase64().data());

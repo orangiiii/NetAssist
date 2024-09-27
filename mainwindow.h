@@ -17,6 +17,7 @@
 #include <QTextBrowser>
 #include <QTextEdit>
 #include <QComboBox>
+#include <QPixmap>
 
 #include "clientwin.h"
 #include "fileio.h"
@@ -63,9 +64,9 @@ private slots:
 
     void handleWriteButton();
 
-    void handleCircleButton();
+    // void handleCircleButton();
 
-    void handleRectangleButton();
+    // void handleRectangleButton();
 
     void displayReceivedPicture( QByteArray &pixmap);  // 用于显示图片的槽函数
     void displaySendPicture( QByteArray &pixmap);

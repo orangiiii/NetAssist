@@ -18,40 +18,45 @@ FileIO::~FileIO()
     // delete ui;
 }
 
-int FileIO::readFile(const QString &filePath,QLabel& label){
+QByteArray FileIO::readFile(const QString &filePath){
     if(filePath.endsWith("txt",Qt::CaseInsensitive)){
         QFile file(filePath);
-        QString fileContent;
+        QByteArray fileContent;
         if(!file.exists()){
-            qDebug()<<"not exist.";
-
-            label.setText("not exist.");
+            QMessageBox::information(this, tr("Error"), tr("not exist."));
         }
         if(!file.open(QIODevice::ReadOnly | QIODevice::Text)){
-            qDebug()<<"can not open";
-            label.setText("can not open");
+            QMessageBox::information(this, tr("Error"), tr("can not open"));
         }
-
         QTextStream in(&file);
-        fileContent = in.readAll().toUtf8();
+        fileContent = in.readAll().toLatin1();
         file.close();
-        label.setText(fileContent);
-        return READ_TEXT;
+        return fileContent;
     }else if(filePath.endsWith(".jpg",Qt::CaseInsensitive)||
                filePath.endsWith(".png",Qt::CaseInsensitive )||
                 filePath.endsWith(".bmp",Qt::CaseInsensitive)){
-        QPixmap pixmap(filePath);
-        if(!pixmap.isNull()){
-            label.setPixmap(pixmap);
-            return READ_IMAGE;
-        }else{
-            label.setText("can not load the picture");
-        }
-
+        QByteArray returnType("returnType");
+        return returnType;
     }else{
-        label.setText("can not support the type");
+        QMessageBox::information(this,tr("Error"),tr("can not support the type"));
     }
     return READ_ERROR;
+
+
+}
+
+int FileIO::getFileType(const QString &filePath){
+    if(filePath.endsWith("txt",Qt::CaseInsensitive)){
+        return READ_TEXT;
+    }else if(filePath.endsWith(".jpg",Qt::CaseInsensitive)||
+               filePath.endsWith(".png",Qt::CaseInsensitive )||
+               filePath.endsWith(".bmp",Qt::CaseInsensitive)){
+        return READ_IMAGE;
+
+    }else{
+        QMessageBox::information(this, tr("Error"), tr("can not support the type"));
+        return READ_ERROR;
+    }
 
 
 }
