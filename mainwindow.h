@@ -64,10 +64,6 @@ private slots:
 
     void handleWriteButton();
 
-    // void handleCircleButton();
-
-    // void handleRectangleButton();
-
     void displayReceivedPicture( QByteArray &pixmap);  // 用于显示图片的槽函数
     void displaySendPicture( QByteArray &pixmap);
 
@@ -101,18 +97,8 @@ private:
     QLabel *label;
     QLabel *imageLabel;  // 用于显示图片
 
-    // QList<QTcpSocket*> clientSockets;
-    // QTcpSocket *tcpclient;
-    // QTcpSocket *clientSocket;
-    // QTcpServer *tcpServer;  // 作为类的成员变量，声明为指针
-    // // ClientWin *clientWin;
-    // QUdpSocket *udpSocket;
-    // QTimer *timer;
-
     FileIO *fileIO;
     Network *network;
-
-
 
     void setupMenuBar();  // 初始化菜单栏的函数
     void setupToolBar();  // 初始化工具栏的函数

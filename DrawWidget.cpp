@@ -135,6 +135,11 @@ void DrawWidget::handleSendButton()
     network->send(true,mode,ip,port,picData);
 
     this->close();
+    rectangles.clear();
+    circleCenters.clear();
+    circleRadii.clear();
+    steps.clear();
+    currentImage = QPixmap();
 }
 
 void DrawWidget::setNetwork(Network* network){

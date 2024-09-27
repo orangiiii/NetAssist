@@ -11,48 +11,81 @@ Network::Network(QWidget *parent)
 Network::~Network()
 {
 }
-
+static bool ifFirst=true;
+static QString type;
 void Network::readData(const QByteArray buffer){
-    QByteArray type=buffer.mid(0,1);
+    static QByteArray accumulatedData; // 用于累积接收到的分包数据
+    if(ifFirst){
+        type=buffer.mid(0,1);
+        accumulatedData.append(buffer.mid(1));
+    }else{
+        accumulatedData.append(buffer);
+    }
 
-    QByteArray data;
-    data = buffer.mid(1);
     if(TYPE_TEXT==type){
-
-        QString recstr= QString::fromUtf8(data);
+        QString recstr = QString::fromUtf8(accumulatedData);
         emit dataReceived(recstr);
+        accumulatedData.clear();  // 处理完毕，清空累积数据
     }else if(TYPE_IMAGE==type){
-        if(data.size()  < sizeof(qint64)){
+        if(accumulatedData.size()  < sizeof(qint64)){
+            ifFirst=false;
             return;
         }
 
-        QByteArray sizeData = data.mid(0,sizeof(qint64));
-        QDataStream sizeStream(&sizeData, QIODevice::ReadOnly);
-        sizeStream.setByteOrder(QDataStream::LittleEndian);  // 显式设置为小端序
-        qint64 imageSize ;
-        sizeStream >> imageSize;
+        if(ifFirst){
+            QByteArray sizeData = accumulatedData.mid(0,sizeof(qint64));
+            QDataStream sizeStream(&sizeData, QIODevice::ReadOnly);
+            sizeStream.setByteOrder(QDataStream::LittleEndian);  // 显式设置为小端序
+            qint64 imageSize ;
+            sizeStream >> imageSize;
+            qDebug()<<(imageSize);
+            storedImageSize = imageSize;  // 保存图像大小
+            qDebug() << "Expected image size:" << imageSize;
+            if((accumulatedData.size()<sizeof(qint64)+imageSize)){
+                qDebug() << "Not enough data received to load the image.";
+                ifFirst=false;
+                return;
+            }
+            // 提取图像数据
+            QByteArray imageData = accumulatedData.mid(0, imageSize);
 
-        qDebug()<<(imageSize);
-        qDebug() << "Expected image size:" << imageSize;
+            // 将字节数组转换为 QPixmap
+            QPixmap pixmap;
+            pixmap.loadFromData(imageData, "PNG");
 
-        if(data.size()<sizeof(qint64)+imageSize){
-            qDebug() << "Not enough data received to load the image.";
-            return;
+            if (!pixmap.isNull()) {
+                emit pictureReceived(imageData);  // 发送信号，通知图片已接收
+            } else {
+                qDebug() << "Failed to load the image from data.";
+            }
+
+            // 清除已经处理的数据
+            accumulatedData = accumulatedData.mid(imageSize);
+            ifFirst = true;  // 重置标志位
+        }else{
+            qint64 imageSize=storedImageSize;
+            if(accumulatedData.size()<imageSize){
+                qDebug()<<"waiting for data";
+                return;
+            }
+            // 提取图像数据
+            QByteArray imageData = accumulatedData.mid(sizeof(qint64), imageSize);
+
+            // 将字节数组转换为 QPixmap
+            QPixmap pixmap;
+            pixmap.loadFromData(imageData, "PNG");
+
+            if (!pixmap.isNull()) {
+                emit pictureReceived(imageData);  // 发送信号，通知图片已接收
+            } else {
+                qDebug() << "Failed to load the image from data.";
+            }
+
+            // 清除已经处理的数据
+            accumulatedData = accumulatedData.mid(imageSize);
+            ifFirst = true;  // 重置标志位
         }
 
-        // 接收图片数据
-        QByteArray imageData = data.mid(sizeof(qint64),imageSize);
-
-        // 将字节数组转换为 QPixmap
-        QPixmap pixmap;
-        pixmap.loadFromData(imageData, "PNG");  // 假设图片是以 PNG 格式发送的
-
-        // 在 QLabel 中显示图片
-        if (!pixmap.isNull()) {
-            emit pictureReceived(imageData);  // 发送信号，通知图片已接收
-        } else {
-            qDebug() << "Failed to load the image from data.";
-        }
 
     }
 

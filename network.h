@@ -68,6 +68,7 @@ private:
     Network* network;
 
     bool ifConnected=false;
+    qint64 storedImageSize = 0;  // 保存图像大小的成员变量
 
 signals:
     void readMessage(const QByteArray& data);
