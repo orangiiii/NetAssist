@@ -8,6 +8,8 @@
 #include <QTcpSocket>
 #include <QUdpSocket>
 #include <QPixmap>
+#include <QNetworkInterface>
+
 
 
 
@@ -56,6 +58,7 @@ public:
     bool socketValid(QString ip, quint16 port);
     void startUdpServer(quint16 port);
     void readUdpData2();
+    QHostAddress getLocalIPAddress();
 public slots:
     void readData(const QByteArray dataBuffer);
 private:

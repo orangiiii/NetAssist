@@ -21,5 +21,6 @@ RESOURCES += \
 
 DISTFILES += \
     .gitattributes \
-    .gitignore
+    .gitignore \
+    readme.md
 

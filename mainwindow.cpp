@@ -424,7 +424,7 @@ void MainWindow::displayReceivedPicture( QByteArray &byteArray){
     dataText->insertHtml(html);
     // QTextCursor cursor = dataText->textCursor();
     // cursor.movePosition(QTextCursor::End);
-        dataText->moveCursor(QTextCursor::End);
+    dataText->moveCursor(QTextCursor::End);
 }
 void MainWindow::displaySendPicture( QByteArray &byteArray){
 
