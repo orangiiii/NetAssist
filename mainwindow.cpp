@@ -89,21 +89,21 @@ void MainWindow::setupUi()
     connectionLayout->addWidget(new QLabel("选择模式:"), 0, 0);
     connectionLayout->addWidget(chooseBox, 0, 1);
 
-    connectionLayout->addWidget(ipLabel, 1, 0);
+    connectionLayout->addWidget(ipLabel, 1,0);
     connectionLayout->addWidget(ipLine, 1, 1);
 
-    connectionLayout->setRowMinimumHeight(1, 30);  // 控制 IP 和 Port 之间的间距
+    connectionLayout->setRowMinimumHeight(1, 30);
 
     connectionLayout->addWidget(portLabel, 2, 0);
     connectionLayout->addWidget(portLine, 2, 1);
 
 
-    connectionLayout->addWidget(openButton, 3, 0, 1, 2, Qt::AlignCenter);  // 设置按钮居中对齐
-    connectionLayout->setRowMinimumHeight(3, 30);  // 控制 connect 和 创建按钮的间距
+    connectionLayout->addWidget(openButton, 3, 0, 1, 2, Qt::AlignCenter);
+    connectionLayout->setRowMinimumHeight(3, 30);
 
-    connectionLayout->addWidget(createButton, 4, 0, 1, 2, Qt::AlignCenter);  // 设置按钮居中对齐
+    connectionLayout->addWidget(createButton, 4, 0, 1, 2, Qt::AlignCenter);
 
-    connectionLayout->setSpacing(10);  // 设置控件之间的默认间距
+    connectionLayout->setSpacing(10);
     connectionLayout->setContentsMargins(10, 10, 10, 10);  // 设置布局的外部间距
     connectionGroupBox->setLayout(connectionLayout);
     connectionLayout->setVerticalSpacing(30);  // 控制每行之间的垂直间距
@@ -143,6 +143,17 @@ void MainWindow::setupUi()
     connect(dataText, &QTextBrowser::customContextMenuRequested, this, &MainWindow::showCustomContextMenu);
     // 设置窗口大小并禁止调整大小
     this->setFixedSize(550, 500);  // 设置窗口固定大小
+
+    // 连接信号与槽
+    connect(chooseBox, QOverload<int>::of(&QComboBox::currentIndexChanged), [=](int index) {
+        if (chooseBox->currentText() == "udp") {
+            ipLabel->setText("username:");
+            portLabel->setText("pwd:");
+        } else {
+            ipLabel->setText("ip:");
+            portLabel->setText("port:");
+        }
+    });
 }
 
 void MainWindow::retranslateUi()
@@ -314,16 +325,22 @@ void MainWindow::handleSendButton()
         return;
     }
     QString data = "Send msg:\n"+ oriData;
-    QString ip = IP_TEST;
+    // QString ip = IP_TEST;
     quint16 port = PORT_TEST;
-    // QString ip = ipLine->text();
+    QString username;
+    // qDebug << username ;
+    if(!ipLine->text().isEmpty()){
+        username = ipLine->text();
+    }else{
+        username =ip;
+    }
     // QString port =portLine->text().toUShort();
     QByteArray dataArray;
     dataArray.append(TYPE_TEXT);
     dataArray.append(oriData.toUtf8());
 
 
-    network->send(sendButton->isEnabled(),chooseBox->currentIndex(),ip,port,dataArray);
+    network->send(sendButton->isEnabled(),chooseBox->currentIndex(),username,port,dataArray);
 
     dataText->append(data);
     textEdit->clear();
@@ -376,31 +393,9 @@ void MainWindow::handleReadButton()
 
 void MainWindow::handleWriteButton()
 {
-    // QString content = dataText->toPlainText();
-    // // QString filePath = QFileDialog::getSaveFileName(this, tr("Save File"), "", tr("Text Files (*.txt);;All Files (*)"));
-
-    // if( fileIO->writeFile(content)){
-    //     QMessageBox::information(this, tr("Success"), tr("Write file successfully."));
-    // }else{
-    //     QMessageBox::information(this, tr("Error"), tr("Failed to write file."));
-    // }
-
     QString htmlContent = dataText->toHtml();
-    QString filePath = QFileDialog::getSaveFileName(this, tr("Save HTML"), "", tr("HTML Files (*.html)"));
-    // 检查用户是否选择了保存文件路径
-    if (filePath.isEmpty()) {
-        return;  // 用户取消操作
-    }
-    // 创建文件并保存 HTML 内容
-    QFile file(filePath);
-    if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        QTextStream out(&file);
-        out << htmlContent;  // 将 HTML 内容写入文件
-        file.close();
-        QMessageBox::information(this, "Success", "File saved successfully.");
-    } else {
-        QMessageBox::warning(this, "Error", "Failed to save the file.");
-    }
+    fileIO->writeFile(htmlContent);
+
 }
 
 void MainWindow::updateTextEdit(const QString& data) {

@@ -1,51 +1,25 @@
-# First Level Heading
+# NetAssistant
 
-Paragraph.
+A network debugging assistant based on Qt GUI.
+## Features:
 
-## Second Level Heading
 
-Paragraph.
+- TCP client；
+- TCP server；
+- UDP；
+- File transfer；
+- Painting in pictrue and transfer；
+- Save Chatting history in html file；
 
-- bullet
-+ other bullet
-* another bullet
-    * child bullet
 
-1. ordered
-2. next ordered
+## Getting Started
 
-### Third Level Heading
+This project is built on Qt6.
 
-Some *italic* and **bold** text and `inline code`.
+## Build
 
-An empty line starts a new paragraph.
+git clone https://github.com/orangiiii/NetAssist.git
+cd NetAssist
+qmake
+make
 
-Use two spaces at the end  
-to force a line break.
-
-A horizontal ruler follows:
-
----
-
-Add links inline like [this link to the Qt homepage](https://www.qt.io),
-or with a reference like [this other link to the Qt homepage][1].
-
-    Add code blocks with
-    four spaces at the front.
-
-> A blockquote
-> starts with >
->
-> and has the same paragraph rules as normal text.
-
-First Level Heading in Alternate Style
-======================================
-
-Paragraph.
-
-Second Level Heading in Alternate Style
----------------------------------------
-
-Paragraph.
-
-[1]: https://www.qt.io

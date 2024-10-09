@@ -59,6 +59,8 @@ public:
     void startUdpServer(quint16 port);
     void readUdpData2();
     QHostAddress getLocalIPAddress();
+    void setUserName(QString username);
+    bool addUserName(QString username);
 public slots:
     void readData(const QByteArray dataBuffer);
 private:
@@ -79,6 +81,8 @@ private:
     bool ifFirst=true;
 
     bool ifConnected=false;
+    QString username;
+
 
 signals:
     void readMessage(const QByteArray& data);

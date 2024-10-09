@@ -65,31 +65,24 @@ int FileIO::getFileType(const QString &filePath){
 
 
 // 写入内容到文件
-bool FileIO::writeFile(const QString &content){
+bool FileIO::writeFile(const QString &htmlContent){
 
-    QString filePath = QFileDialog::getSaveFileName(this, tr("Save File"), "",
-                                                    tr("Image Files (*.png *.jpg *.bmp);;All Files (*)"));
-
-    if(filePath.endsWith("txt",Qt::CaseInsensitive)){
+    QString filePath = QFileDialog::getSaveFileName(this, tr("Save HTML"), "", tr("HTML Files (*.html)"));
+    // 检查用户是否选择了保存文件路径
+    if (!filePath.isEmpty()) {
+        // 创建文件并保存 HTML 内容
         QFile file(filePath);
-
-        if(!file.open(QIODevice::WriteOnly | QIODevice::Text)){
-
-            QMessageBox::information(this, tr("Error"), tr("can not open"));
-            return false;
+        if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            QTextStream out(&file);
+            out << htmlContent;  // 将 HTML 内容写入文件
+            file.close();
+            QMessageBox::information(this, "Success", "File saved successfully.");
+        } else {
+            QMessageBox::warning(this, "Error", "Failed to save the file.");
         }
-
-        // 写入
-        QTextStream out (&file);
-        out<<content;
-        file.close();
-        qDebug()<<("Write file successfully.");
         return true;
-    }else{
-
-        qDebug()<<("can not support the type");
-        return false;
     }
+    return false;
 };
 
 // 写入内容到文件

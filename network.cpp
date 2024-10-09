@@ -107,17 +107,27 @@ void Network::readUdpData(){
         udpSocket->readDatagram(buffer.data(), buffer.size(), &sender, &senderPort);
         qDebug() << "Received data:" << buffer;
 
+        QByteArray nameSize = buffer.mid(0,sizeof(qint64));
+        QDataStream stream(nameSize);
+        qint64 userNameSize;
+        stream>>userNameSize;
+
+        qDebug() << "User name size:" << userNameSize;
+        QByteArray uName = buffer.mid(sizeof(qint64),userNameSize);
+
+
         QHostAddress localAddress = getLocalIPAddress();
         quint16 localPort = udpSocket->localPort();
-        if (sender == localAddress && senderPort == localPort) {
+
+        if (sender == localAddress && senderPort == localPort&&this->username==uName) {
             qDebug() << "Received message from self, ignoring.";
             return;  // 忽略本地发出的消息
         }
 
 
         // buffer = udpSocket->readAll();
-        QString recstr= QString::fromUtf8(buffer);
-        emit readMessage(buffer);
+        QString recstr= QString::fromUtf8(buffer.mid(sizeof(qint64)+userNameSize+1));
+        emit dataReceived(recstr);
 
         //由于udp是无连接协议，数据包没有顺序保证，readAll() 可能会丢失多个数据报之间的边界，导致数据不完整或拼接在一起。
         //readAll主要用于tcp连接,在udp中，readAll() 读取的是当前所有可用的数据，而不是一个完整的udp数据包。
@@ -199,37 +209,25 @@ bool Network::startServerConnection(QString ip,
         return false;
     }
 }
-bool Network::startUdpConnection(QString ip,
+bool Network::startUdpConnection(QString userName,
                                     quint16 port){
-    // if(!udpSocket->isOpen()){
-    //     QHostAddress serverAddr;
-    //     if(!serverAddr.setAddress(ip)){
-    //         QMessageBox::information(this,tr("error"),tr("无效的ip地址"));
-    //     }
 
-    //     if(udpSocket->bind(serverAddr,port)){
-    //         qDebug()<<"udp socket bind to "
-    //                  <<ip<<":"<<port;
-    //         connect(udpSocket,&QUdpSocket::readyRead,this,&Network::readUdpData);
-    //         return true;
-    //     }else{
-    //         QMessageBox::information(this,tr("error"),tr("无法绑定udpsocket"));
-    //     }
+    if(addUserName(userName)){
+        udpSocket = new QUdpSocket(this);
+        // 绑定到广播端口，让客户端能够接收来自该端口的消息
+        if (udpSocket->bind(QHostAddress::AnyIPv4, port, QUdpSocket::ShareAddress | QUdpSocket::ReuseAddressHint)) {
+            qDebug() << "UDP socket bound to broadcast port " << port;
+            return connect(udpSocket, &QUdpSocket::readyRead, this, &Network::readUdpData);
 
-    // }else{
-    //     udpSocket->close();
-    //     qDebug()<<"udp connection closed.";
-    //     return false;
-    // }
-    // return true;
-    udpSocket = new QUdpSocket(this);
-    // 绑定到广播端口，让客户端能够接收来自该端口的消息
-    if (udpSocket->bind(QHostAddress::AnyIPv4, port, QUdpSocket::ShareAddress | QUdpSocket::ReuseAddressHint)) {
-        qDebug() << "UDP socket bound to broadcast port " << port;
-        connect(udpSocket, &QUdpSocket::readyRead, this, &Network::readUdpData);
-    } else {
-        qDebug() << "Failed to bind UDP socket on port " << port;
+        } else {
+            qDebug() << "Failed to bind UDP socket on port " << port;
+            return false;
+        }
+    }else{
+        return false;
     }
+
+
 
 
 }
@@ -257,11 +255,22 @@ void Network::onNewConnection(){
     });
 
 }
-
-void Network::send(bool ifSendButton,int mode,QString ip,quint16 port,QByteArray data)
-
+static QList<QString> userList;
+bool Network::addUserName(QString username)
 {
+    this->username=username;
+    if(!userList.contains(username)){
+        userList.append(username);
+        return true;
+    }else{
+        QMessageBox::information(this,tr("error"),tr("用户已登录"));
+        return false;
+    }
 
+
+}
+void Network::send(bool ifSendButton,int mode,QString username,quint16 port,QByteArray data)
+{
     if(!ifSendButton){
         qDebug()<<"没连";
         return;
@@ -291,7 +300,17 @@ void Network::send(bool ifSendButton,int mode,QString ip,quint16 port,QByteArray
         // udpSocket->writeDatagram(data,QHostAddress::Broadcast,port);
         // // debug
         // qDebug() << "data sent(udp): " << data.toStdString();
-        qint64 bytesSent = udpSocket->writeDatagram(data, QHostAddress::Broadcast, port);  // 向广播地址发送数据
+
+        quint16 serverPort = PORT_TEST;
+        QByteArray dataArray ;
+        qint64 nameSize = username.toUtf8().size();
+
+        QDataStream stream(&dataArray, QIODevice::WriteOnly);
+        stream << nameSize;
+        dataArray.append(username.toUtf8());
+        dataArray.append(data);
+        qint64 bytesSent = udpSocket->writeDatagram(dataArray, QHostAddress::Broadcast, serverPort);  // 向广播地址发送数据
+
         if (bytesSent == -1) {
             qDebug() << "Failed to send broadcast message.";
         } else {
@@ -310,7 +329,14 @@ void Network::openConnection(int mode,QString ip,quint16 port,bool *ifSendButton
 
     if(mode==UDP_MODE){
         qDebug()<<"UDP_MODE";
-        *ifSendButton = startUdpConnection(ip,port);
+        if(ip.isEmpty()||ip==""){
+            ip="user";
+        }
+
+        qDebug() << ip;
+        QString uName=ip;
+        qDebug() << uName;
+        *ifSendButton = startUdpConnection(uName,port);
     }else if(mode==TCP_CLIENT_MODE){
         qDebug()<<"TCP_CLIENT_MODE";
         *ifSendButton =startClientConnection(ip,port);
