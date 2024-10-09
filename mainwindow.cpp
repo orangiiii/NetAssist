@@ -1,10 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-// #include "ui_clientwin.h"
 #include <QWidget>
 #include "define.h"
 #include <QGroupBox>
-// #include "clientwin.h"
 
 #include <QApplication>
 #include <QMetaObject>
@@ -282,10 +280,6 @@ void MainWindow::handleOpenButton()
         network->setIfConnected(false);
         chooseBox->setEnabled(true);
     }
-
-
-
-
 }
 
 
@@ -345,7 +339,6 @@ void MainWindow::handleSendButton()
     dataText->append(data);
     textEdit->clear();
     // 自动滚动到最后一行
-    // dataText->verticalScrollBar()->setValue(dataText->verticalScrollBar()->maximum());
     dataText->moveCursor(QTextCursor::End);
 
 }
@@ -417,8 +410,6 @@ void MainWindow::displayReceivedPicture( QByteArray &byteArray){
         html=blank+html;
     }
     dataText->insertHtml(html);
-    // QTextCursor cursor = dataText->textCursor();
-    // cursor.movePosition(QTextCursor::End);
     dataText->moveCursor(QTextCursor::End);
 }
 void MainWindow::displaySendPicture( QByteArray &byteArray){
@@ -432,7 +423,5 @@ void MainWindow::displaySendPicture( QByteArray &byteArray){
         html=blank+html;
     }
     dataText->insertHtml(html);
-    // QTextCursor cursor = dataText->textCursor();
-    // cursor.movePosition(QTextCursor::End);
-        dataText->moveCursor(QTextCursor::End);
+    dataText->moveCursor(QTextCursor::End);
 }

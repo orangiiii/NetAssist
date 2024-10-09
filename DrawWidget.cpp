@@ -187,8 +187,6 @@ void DrawWidget::paintEvent(QPaintEvent *event) {
         }
     }
 
-
-
 }
 
 void DrawWidget::mousePressEvent(QMouseEvent *event) {

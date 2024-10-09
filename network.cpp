@@ -92,7 +92,7 @@ void Network::readTcpData(){
         return;
     }
     QByteArray buffer = tcpclient->readAll();
-    buffer = Compressor::decompressData(buffer);
+    // buffer = Compressor::decompressData(buffer);
     readData(buffer);
 }
 void Network::readUdpData(){
@@ -122,22 +122,20 @@ void Network::readUdpData(){
 
         if (sender == localAddress && senderPort == localPort&&this->username==uName) {
             qDebug() << "Received message from self, ignoring.";
-            return;  // 忽略本地发出的消息
+            return;
         }
 
 
         // buffer = udpSocket->readAll();
-        QString recstr= QString::fromUtf8(buffer.mid(sizeof(qint64)+userNameSize+1));
-        emit dataReceived(recstr);
+        buffer=buffer.mid(sizeof(qint64)+userNameSize);
+        readData(buffer);
+        // QString recstr= QString::fromUtf8(buffer.mid(sizeof(qint64)+userNameSize+1));
+        // emit dataReceived(recstr);
 
         //由于udp是无连接协议，数据包没有顺序保证，readAll() 可能会丢失多个数据报之间的边界，导致数据不完整或拼接在一起。
         //readAll主要用于tcp连接,在udp中，readAll() 读取的是当前所有可用的数据，而不是一个完整的udp数据包。
     }
 
-
-    QString recstr= QString::fromUtf8(buffer);;
-    // ui->data->append("getMsg:");
-    // ui->data->append(recstr);
 
 
 }
@@ -284,7 +282,7 @@ void Network::send(bool ifSendButton,int mode,QString username,quint16 port,QByt
     }
 
 
-    data = Compressor::compressData(data);
+    // data = Compressor::compressData(data);
     // 当前连接的客户端的 QTcpSocket
     if(mode==TCP_SERVER_MODE){
         for (QTcpSocket *clientSocket:clientSockets) {
