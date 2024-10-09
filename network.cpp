@@ -12,6 +12,7 @@ Network::~Network()
 {
 }
 
+static QList<QString> userList;
 void Network::readData(const QByteArray buffer){
     // static QByteArray accumulatedData; // 用于累积接收到的分包数据
     if(ifFirst){
@@ -211,21 +212,28 @@ bool Network::startServerConnection(QString ip,
 }
 bool Network::startUdpConnection(QString userName,
                                     quint16 port){
+    if(udpSocket->isValid()){
+        udpSocket->close();
+        userList.removeOne(userName);
+        qDebug() << "Udp Socket Stopped!";
+        return false;
+    }else{
+        if(addUserName(userName)){
+            udpSocket = new QUdpSocket(this);
+            // 绑定到广播端口，让客户端能够接收来自该端口的消息
+            if (udpSocket->bind(QHostAddress::AnyIPv4, port, QUdpSocket::ShareAddress | QUdpSocket::ReuseAddressHint)) {
+                qDebug() << "UDP socket bound to broadcast port " << port;
+                return connect(udpSocket, &QUdpSocket::readyRead, this, &Network::readUdpData);
 
-    if(addUserName(userName)){
-        udpSocket = new QUdpSocket(this);
-        // 绑定到广播端口，让客户端能够接收来自该端口的消息
-        if (udpSocket->bind(QHostAddress::AnyIPv4, port, QUdpSocket::ShareAddress | QUdpSocket::ReuseAddressHint)) {
-            qDebug() << "UDP socket bound to broadcast port " << port;
-            return connect(udpSocket, &QUdpSocket::readyRead, this, &Network::readUdpData);
-
-        } else {
-            qDebug() << "Failed to bind UDP socket on port " << port;
+            } else {
+                qDebug() << "Failed to bind UDP socket on port " << port;
+                return false;
+            }
+        }else{
             return false;
         }
-    }else{
-        return false;
     }
+
 
 
 
@@ -255,7 +263,6 @@ void Network::onNewConnection(){
     });
 
 }
-static QList<QString> userList;
 bool Network::addUserName(QString username)
 {
     this->username=username;
