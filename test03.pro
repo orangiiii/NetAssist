@@ -1,6 +1,6 @@
 HEADERS += \
     DrawWidget.h \
-    clientwin.h \
+    compressor.h \
     define.h \
     fileio.h \
     mainwindow.h \
@@ -8,7 +8,7 @@ HEADERS += \
 
 SOURCES += \
     DrawWidget.cpp \
-    clientwin.cpp \
+    compressor.cpp \
     fileio.cpp \
     main.cpp \
     mainwindow.cpp \

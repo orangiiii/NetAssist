@@ -10,9 +10,7 @@
 #include <QPixmap>
 #include <QNetworkInterface>
 
-
-
-
+#include <compressor.h>
 #include "define.h"
 
 namespace Ui {

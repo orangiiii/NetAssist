@@ -20,7 +20,6 @@
 #include <QPixmap>
 #include <QScrollBar>
 
-#include "clientwin.h"
 #include "fileio.h"
 #include "network.h"
 #include "drawwidget.h"

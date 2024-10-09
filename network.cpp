@@ -39,7 +39,6 @@ void Network::readData(const QByteArray buffer){
             sizeStream.setByteOrder(QDataStream::LittleEndian);  // 显式设置为小端序
             qint64 imageSize ;
             sizeStream >> imageSize;
-            qDebug()<< imageSize ;
             storedImageSize = imageSize;  // 保存图像大小
             qDebug() << "Expected image size:" << imageSize;
 
@@ -93,6 +92,7 @@ void Network::readTcpData(){
         return;
     }
     QByteArray buffer = tcpclient->readAll();
+    buffer = Compressor::decompressData(buffer);
     readData(buffer);
 }
 void Network::readUdpData(){
@@ -284,6 +284,7 @@ void Network::send(bool ifSendButton,int mode,QString username,quint16 port,QByt
     }
 
 
+    data = Compressor::compressData(data);
     // 当前连接的客户端的 QTcpSocket
     if(mode==TCP_SERVER_MODE){
         for (QTcpSocket *clientSocket:clientSockets) {
@@ -302,12 +303,6 @@ void Network::send(bool ifSendButton,int mode,QString username,quint16 port,QByt
         tcpclient->flush();
         qDebug() << "data send from client " ;
     }else if(mode==UDP_MODE){
-        // // 发送数据
-        // // 这里的ip端口 组播,后期再改
-        // udpSocket->writeDatagram(data,QHostAddress::Broadcast,port);
-        // // debug
-        // qDebug() << "data sent(udp): " << data.toStdString();
-
         quint16 serverPort = PORT_TEST;
         QByteArray dataArray ;
         qint64 nameSize = username.toUtf8().size();
@@ -339,10 +334,7 @@ void Network::openConnection(int mode,QString ip,quint16 port,bool *ifSendButton
         if(ip.isEmpty()||ip==""){
             ip="user";
         }
-
-        qDebug() << ip;
         QString uName=ip;
-        qDebug() << uName;
         *ifSendButton = startUdpConnection(uName,port);
     }else if(mode==TCP_CLIENT_MODE){
         qDebug()<<"TCP_CLIENT_MODE";
@@ -368,17 +360,13 @@ QByteArray Network::getPicData(QPixmap* pixmap){
     buffer.open(QIODevice::WriteOnly);
     pixmap->save(&buffer, "PNG"); // 将图像保存为PNG格式到字节数组中
 
-    // 获取数据大小
     qint64 byteArraySize = byteArray.size();
 
-    qDebug()<<(sizeof(qint64));
-    // 发送数据大小，方便接收端知道要接收多少数据
     QByteArray sizeData;
     QDataStream sizeStream(&sizeData, QIODevice::WriteOnly);
     sizeStream.setByteOrder(QDataStream::LittleEndian);  // 显式设置为小端序
     sizeStream << byteArraySize;
 
-    qDebug()<<(byteArraySize);
     QByteArray finalData;
     finalData.append(TYPE_IMAGE);
     finalData.append(sizeData);
